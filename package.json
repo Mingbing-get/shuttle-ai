@@ -1,0 +1,73 @@
+{
+  "name": "@shuttle-ai/root",
+  "version": "0.0.0",
+  "description": "Shuttle AI",
+  "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
+  "scripts": {
+    "test": "jest",
+    "dev:server": "pnpm --filter @shuttle-ai/server dev",
+    "dev:front": "pnpm --filter @shuttle-ai/front dev",
+    "build": "pnpm --filter './packages/**' build",
+    "commit": "cz",
+    "prepare": "husky install",
+    "lint": "eslint --ext .ts,.tsx,.vue,.js,.jsx --config ./.eslintrc.js packages/",
+    "clean": "pnpm -r clean && rm -rf node_modules",
+    "changeset": "changeset",
+    "version-packages": "changeset version",
+    "release": "pnpm build && changeset publish"
+  },
+  "devDependencies": {
+    "@changesets/cli": "^2.27.1",
+    "@commitlint/cli": "^18.4.3",
+    "@commitlint/config-conventional": "^18.4.3",
+    "@jest/globals": "^29.7.0",
+    "@types/jest": "^29.5.12",
+    "@typescript-eslint/eslint-plugin": "^6.14.0",
+    "commitizen": "^4.3.0",
+    "cz-conventional-changelog": "^3.3.0",
+    "eslint": "^8.55.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-config-standard-with-typescript": "^42.0.0",
+    "eslint-plugin-import": "^2.29.1",
+    "eslint-plugin-n": "^16.4.0",
+    "eslint-plugin-prettier": "^5.0.1",
+    "eslint-plugin-promise": "^6.1.1",
+    "eslint-plugin-vue": "^9.23.0",
+    "husky": "^8.0.3",
+    "jest": "^29.7.0",
+    "lint-staged": "^15.2.0",
+    "prettier": "^3.1.1",
+    "sass": "^1.72.0",
+    "ts-jest": "^29.1.2",
+    "typescript": "^5.3.3",
+    "vite": "^7.2.4",
+    "vite-plugin-dts": "^4.5.4",
+    "vite-plugin-node-externals": "^0.0.1"
+  },
+  "keywords": [
+    "shuttle",
+    "ai",
+    "vue",
+    "react"
+  ],
+  "author": "bing-ming",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Mingbing-get/shuttle-ai"
+  },
+  "homepage": "",
+  "lint-staged": {
+    "*.{js,jsx,ts,tsx,vue}": "eslint --ext .ts,.tsx,.vue,.js,.jsx --config ./.eslintrc.js packages/",
+    "*.{js,jsx,ts,tsx,vue,css,md,html,json}": "prettier --cache --write"
+  },
+  "packageManager": "pnpm@8.15.4",
+  "config": {
+    "commitizen": {
+      "path": "./node_modules/cz-conventional-changelog"
+    }
+  }
+}
