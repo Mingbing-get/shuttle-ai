@@ -1,10 +1,13 @@
 import { ShuttleAi } from '@shuttle-ai/type'
+import Agent from './agent'
 
 export default class Work {
   private id: string = ''
   private status: ShuttleAi.Client.Work.Status = 'idle'
 
-  constructor(private options: ShuttleAi.Client.Work.Options) {
+  private agentMap: Map<string, Agent> = new Map()
+
+  constructor(readonly options: ShuttleAi.Client.Work.Options) {
     this.linkTransporter()
   }
 
@@ -16,10 +19,8 @@ export default class Work {
         this.setStatus('running')
       } else if (data.type === 'endWork') {
         this.setStatus('completed')
-      } else if (data.type === 'initAgent') {
-        this.reportInitAgent(data.data)
-      } else if (data.type === 'subAgentStart') {
-        data.data.parentAgentId
+      } else if (data.type === 'agentStart') {
+        this.initAgent(data.data)
       }
     })
   }
@@ -45,21 +46,49 @@ export default class Work {
     this.status = status
   }
 
-  private reportInitAgent(data: ShuttleAi.Ask.InitAgent['data']) {
-    const reportData: ShuttleAi.Report.InitAgent = {
-      type: 'initAgent',
+  private addAgent(agent: Agent) {
+    if (agent.options.parentId) {
+      const parentAgent = this.agentMap.get(agent.options.parentId)
+      if (parentAgent) {
+        parentAgent.addChild(agent)
+      }
+    }
+    this.agentMap.set(agent.options.id, agent)
+  }
+
+  private initAgent(data: ShuttleAi.Ask.AgentStart['data']) {
+    const reportData: ShuttleAi.Report.AgentStart = {
+      type: 'agentStart',
       workId: this.id,
       data: {
-        id: data.id,
+        agentId: data.agentId,
         params: {},
       },
     }
 
+    let params: ShuttleAi.Client.Agent.WithRunToolParams = {}
     if (typeof this.options.initAgent === 'function') {
-      reportData.data.params = this.options.initAgent(data.id)
+      params = this.options.initAgent(data.agentName)
     } else if (this.options.initAgent) {
-      reportData.data.params = this.options.initAgent[data.id] || {}
+      params = this.options.initAgent[data.agentName] || {}
     }
+
+    reportData.data.params = {
+      ...params,
+      tools: params.tools?.map((tool) => {
+        const { run, ...rest } = tool
+
+        return rest
+      }),
+    }
+
+    const agent = new Agent({
+      id: data.agentId,
+      work: this,
+      parentId: data.parentAgentId,
+      tools: params.tools,
+    })
+    this.addAgent(agent)
 
     return this.options.transporter.report(reportData)
   }

@@ -23,8 +23,8 @@ const confirmTool: Middleware = (ctx) => {
     resolver.resolveConfirmTool(data.data.toolId, data.data.result)
   } else if (data.type === 'toolResult') {
     resolver.resolveRemoteTool(data.data.id, data.data.result)
-  } else if (data.type === 'initAgent') {
-    resolver.resolveInitAgent(data.data.id, data.data.params)
+  } else if (data.type === 'agentStart') {
+    resolver.resolveAgentStart(data.data.agentId, data.data.params)
   } else {
     responseModel.setError(
       ResponseModel.CODE.VALIDATE_ERROR,

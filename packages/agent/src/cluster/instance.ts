@@ -32,9 +32,11 @@ export default class AgentCluster extends Runnable {
   }
 
   async invoke(input: string, options?: any): Promise<string> {
-    const params = await this.options.hooks.getAgentParams(
-      AgentCluster.MAIN_AGENT_NAME,
-    )
+    const params = await this.options.hooks.onAgentStart({
+      agentId: this.id,
+      agentName: AgentCluster.MAIN_AGENT_NAME,
+      content: input,
+    })
     const agent = this.createAgent(params, this.id)
 
     this.addMessage({
@@ -69,6 +71,7 @@ export default class AgentCluster extends Runnable {
 
     await Array.fromAsync(result)
 
+    this.options.hooks.onAgentEnd?.(this.id)
     const lastAiMessage = this.getLastAiMessage(this.id)
     return lastAiMessage?.content || ''
   }
@@ -135,17 +138,15 @@ export default class AgentCluster extends Runnable {
           throw new Error(`Sub-agent ${params.subAgentName} not found.`)
         }
 
-        const createAgentParams = await this.options.hooks.getAgentParams(
-          params.subAgentName,
-        )
         const currentAgentId = randomUUID()
+        const createAgentParams = await this.options.hooks.onAgentStart({
+          agentId: currentAgentId,
+          agentName: params.subAgentName,
+          parentAgentId: agentId,
+          content: params.request,
+        })
         const agent = this.createAgent(createAgentParams, currentAgentId)
 
-        this.options.hooks.onSubAgentStart?.(
-          currentAgentId,
-          agentId,
-          params.request,
-        )
         this.addMessage({
           id: randomUUID(),
           workId: this.id,
@@ -177,7 +178,7 @@ export default class AgentCluster extends Runnable {
         )
 
         await Array.fromAsync(result)
-        this.options.hooks.onSubAgentEnd?.(currentAgentId)
+        this.options.hooks.onAgentEnd?.(currentAgentId)
 
         const lastAiMessage = this.getLastAiMessage(currentAgentId)
         return lastAiMessage?.content || ''

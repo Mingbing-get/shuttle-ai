@@ -1,8 +1,19 @@
 import { Readable } from 'stream'
 import { randomUUID } from 'crypto'
 import { ShuttleAi } from '@shuttle-ai/type'
+import { CreateAgentParams } from 'langchain'
 
-export default function createReadableHook() {
+export default function createReadableHook(
+  getAgentParamsFromServer: (
+    agentName: string,
+  ) => Promise<
+    ShuttleAi.Cluster.ToolsWithSubAgents & Omit<CreateAgentParams, 'tools'>
+  >,
+) {
+  const initAgentResolver: Record<
+    string,
+    (value: ShuttleAi.Report.AgentStart['data']['params']) => void
+  > = {}
   const remoteToolResolver: Record<string, (value: any) => void> = {}
   const confirmToolResolver: Record<
     string,
@@ -47,18 +58,54 @@ export default function createReadableHook() {
     delete confirmToolResolver[id]
   }
 
-  const hooks: Omit<ShuttleAi.Cluster.Hooks, 'getAgentParams'> = {
+  function resolveAgentStart(
+    id: string,
+    value: ShuttleAi.Report.AgentStart['data']['params'],
+  ) {
+    if (!initAgentResolver[id]) {
+      throw new Error(`not find init agent resolver: ${id}`)
+    }
+
+    initAgentResolver[id](value)
+    delete initAgentResolver[id]
+  }
+
+  const hooks: ShuttleAi.Cluster.Hooks = {
     onChunk(chunk) {
       send({ type: 'chunk', data: { chunk } })
     },
-    onSubAgentStart(subAgentId, parentAgentId, content) {
+    async onAgentStart(options) {
       send({
-        type: 'subAgentStart',
-        data: { subAgentId, parentAgentId, content },
+        type: 'agentStart',
+        data: options,
       })
+
+      const { promise, resolve } =
+        Promise.withResolvers<ShuttleAi.Report.AgentStart['data']['params']>()
+
+      initAgentResolver[options.agentId] = resolve
+
+      const remoteParams = await promise
+      const serverParams = await getAgentParamsFromServer(options.agentName)
+
+      const systemPromptList = [
+        serverParams?.systemPrompt || '',
+        remoteParams.systemPrompt || '',
+      ].filter(Boolean)
+
+      return {
+        ...serverParams,
+        systemPrompt:
+          systemPromptList.length > 0 ? systemPromptList.join('\n') : undefined,
+        tools: [...(serverParams?.tools || []), ...(remoteParams.tools || [])],
+        subAgents: [
+          ...(serverParams?.subAgents || []),
+          ...(remoteParams.subAgents || []),
+        ],
+      }
     },
-    onSubAgentEnd(subAgentId) {
-      send({ type: 'subAgentEnd', data: { subAgentId } })
+    onAgentEnd(agentId) {
+      send({ type: 'agentEnd', data: { agentId } })
     },
     onToolStart(tool) {
       send({ type: 'toolStart', data: { tool } })
@@ -93,5 +140,6 @@ export default function createReadableHook() {
     close,
     resolveRemoteTool,
     resolveConfirmTool,
+    resolveAgentStart,
   }
 }

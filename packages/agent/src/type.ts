@@ -47,16 +47,11 @@ declare module '@shuttle-ai/type' {
       }
 
       export interface Hooks {
-        getAgentParams: (
-          name: string,
-        ) => Promise<ToolsWithSubAgents & Omit<CreateAgentParams, 'tools'>>
         onChunk?: (chunk: ShuttleAi.Message.AIChunk) => void
-        onSubAgentStart?: (
-          agentId: string,
-          parentAgentId: string,
-          content: string,
-        ) => void
-        onSubAgentEnd?: (agentId: string) => void
+        onAgentStart: (
+          options: ShuttleAi.Ask.AgentStart['data'],
+        ) => Promise<ToolsWithSubAgents & Omit<CreateAgentParams, 'tools'>>
+        onAgentEnd?: (agentId: string) => void
         onToolStart?: (tool: ShuttleAi.Message.AITool) => void
         onToolConfirm?: (
           toolPath: ShuttleAi.Tool.Path,

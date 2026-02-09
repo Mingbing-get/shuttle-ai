@@ -100,15 +100,17 @@ export namespace ShuttleAi {
 
     export interface Chunk extends Base<'chunk', { chunk: Message.AIChunk }> {}
 
-    export interface SubAgentStart extends Base<
-      'subAgentStart',
-      { subAgentId: string; parentAgentId: string; content: string }
+    export interface AgentStart extends Base<
+      'agentStart',
+      {
+        agentId: string
+        agentName: string
+        parentAgentId?: string
+        content: string
+      }
     > {}
 
-    export interface SubAgentEnd extends Base<
-      'subAgentEnd',
-      { subAgentId: string }
-    > {}
+    export interface AgentEnd extends Base<'agentEnd', { agentId: string }> {}
 
     export interface ToolStart extends Base<
       'toolStart',
@@ -134,23 +136,17 @@ export namespace ShuttleAi {
 
     export interface EndWork extends Base<'endWork', { workId: string }> {}
 
-    export interface InitAgent extends Base<
-      'initAgent',
-      { id: string; agentName: string }
-    > {}
-
     export type Define =
       | StartWork
       | EndWork
       | Ping
       | Chunk
-      | SubAgentStart
-      | SubAgentEnd
+      | AgentStart
+      | AgentEnd
       | ToolStart
       | ToolEnd
       | RunRemoteTool
       | ToolConfirm
-      | InitAgent
   }
 
   export namespace Report {
@@ -170,10 +166,10 @@ export namespace ShuttleAi {
       { id: string; result: any }
     > {}
 
-    export interface InitAgent extends Base<
-      'initAgent',
+    export interface AgentStart extends Base<
+      'agentStart',
       {
-        id: string
+        agentId: string
         params: {
           systemPrompt?: string
           tools?: Tool.Define[]
@@ -182,6 +178,6 @@ export namespace ShuttleAi {
       }
     > {}
 
-    export type Define = ConfirmTool | ToolResult | InitAgent
+    export type Define = ConfirmTool | ToolResult | AgentStart
   }
 }
