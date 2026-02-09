@@ -5,8 +5,7 @@ import mount from 'koa-mount'
 
 import errorHandle from './middleware/errorHandle'
 import { jwtVerify } from './middleware/jwt'
-// import dataModelRouter from './router/dataModel'
-// import dataEnumRouter from './router/dataEnum'
+import aiRouter from './router/ai'
 
 main()
 
@@ -26,8 +25,7 @@ async function main() {
   // 配置JWT验证中间件
   app.use(jwtVerify)
 
-  // app.use(mount('/dataModel', dataModelRouter.routes()))
-  // app.use(mount('/dataEnum', dataEnumRouter.routes()))
+  app.use(mount('/ai', aiRouter.routes()))
 
   // 错误处理中间件
   app.use(async (ctx, next) => {

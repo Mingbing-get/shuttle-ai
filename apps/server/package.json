@@ -32,7 +32,11 @@
     "koa-mount": "^4.2.0",
     "string-random": "^1.0.0",
     "@shuttle-ai/agent": "workspace:*",
-    "@shuttle-ai/type": "workspace:*"
+    "@shuttle-ai/type": "workspace:*",
+    "langchain": "^1.2.17",
+    "@langchain/core": "^1.1.19",
+    "@langchain/openai": "^1.2.4",
+    "zod": "^4.3.5"
   },
   "devDependencies": {
     "tsx": "^4.7.1",
