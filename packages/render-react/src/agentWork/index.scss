@@ -1,0 +1,35 @@
+.agent-work {
+  display: flex;
+  flex-direction: column;
+  .agent-work-main {
+    flex: 1;
+    overflow-y: auto;
+    padding: 12px;
+
+    .agent-work-agent {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      position: relative;
+
+      &::before {
+        content: ' ';
+        display: inline-block;
+        position: absolute;
+        top: 8px;
+        left: 0;
+        width: 1px;
+        z-index: -1;
+        height: calc(100% - 8px);
+        background-color: rgba(0, 0, 0, 0.1);
+      }
+    }
+
+    .agent-work-agent-message {
+      padding: 0 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+  }
+}

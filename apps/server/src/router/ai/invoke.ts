@@ -1,14 +1,17 @@
 import 'dotenv/config'
 import { ChatOpenAI } from '@langchain/openai'
 import { Middleware } from '@koa/router'
+import { ShuttleAi } from '@shuttle-ai/type'
 import { AgentCluster, readableHook } from '@shuttle-ai/agent'
 import { resolve } from 'path'
 
 import resolverManager from './resolverManager'
 
 const invoke: Middleware = async (ctx) => {
-  const { prompt } = ctx.request.body as {
+  const { workId, prompt, autoRunScope } = ctx.request.body as {
+    workId: string
     prompt: string
+    autoRunScope?: ShuttleAi.Cluster.AutoRunScope
   }
 
   // 设置响应头为Server-Sent Events格式
@@ -46,7 +49,9 @@ const invoke: Middleware = async (ctx) => {
     })
 
   const agentCluster = new AgentCluster({
+    id: workId,
     hooks: hooks,
+    autoRunScope,
   })
 
   resolverManager.addAgentResolver(agentCluster.id, {

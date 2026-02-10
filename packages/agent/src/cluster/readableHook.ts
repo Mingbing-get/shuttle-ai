@@ -82,11 +82,19 @@ export default function createReadableHook(
         remoteParams.systemPrompt || '',
       ].filter(Boolean)
 
+      const tools = (remoteParams.tools || []).map((tool) => ({
+        ...tool,
+        extras: {
+          ...tool.extras,
+          remote: true,
+        },
+      }))
+
       return {
         ...serverParams,
         systemPrompt:
           systemPromptList.length > 0 ? systemPromptList.join('\n') : undefined,
-        tools: [...(serverParams?.tools || []), ...(remoteParams.tools || [])],
+        tools: [...(serverParams?.tools || []), ...tools],
         subAgents: [
           ...(serverParams?.subAgents || []),
           ...(remoteParams.subAgents || []),

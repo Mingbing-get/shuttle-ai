@@ -4,6 +4,12 @@ import Work from './work'
 
 declare module '@shuttle-ai/type' {
   export namespace ShuttleAi {
+    export namespace Tool {
+      export interface Extras {
+        disableExport?: boolean
+      }
+    }
+
     export namespace Client {
       export namespace Agent {
         export type Status = 'idle' | 'running'
@@ -49,17 +55,21 @@ declare module '@shuttle-ai/type' {
       export namespace Work {
         export type Status = 'idle' | 'pending' | 'running'
 
+        export type AutoRunScope = 'always' | 'read' | 'none'
+
         export interface Options {
           transporter: Transporter
           initAgent?:
             | Record<string, Agent.WithRunToolParams>
             | ((agentName: string) => Agent.WithRunToolParams)
+          autoRunScope?: AutoRunScope
         }
       }
 
       export interface StartWork {
         prompt: string
         workId?: string
+        autoRunScope?: Work.AutoRunScope
       }
 
       export interface Transporter {

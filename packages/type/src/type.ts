@@ -80,6 +80,7 @@ export namespace ShuttleAi {
     export interface AI extends Base<'assistant'> {
       content: string
       toolCalls?: Tool.Call[]
+      subAgentIds?: string[]
     }
 
     export interface Tool extends Base<'tool'> {
@@ -106,6 +107,7 @@ export namespace ShuttleAi {
       {
         agentId: string
         agentName: string
+        beloneMessageId?: string
         parentAgentId?: string
         content: string
       }

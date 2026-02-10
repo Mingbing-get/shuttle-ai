@@ -1,28 +1,23 @@
-import { useCallback, useEffect, useState } from 'react'
-import { Button, Input } from 'antd'
-import { ShuttleAi } from '@shuttle-ai/type'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { Button, Input, Select } from 'antd'
 import { SendOutlined } from '@ant-design/icons'
 
 import { useWork } from '../../context'
+import { useWorkStatus, useWorkAutoRunScope } from '../../hooks'
 
 import './index.scss'
 
 export default function AgentWorkAction() {
-  const [status, setStatus] = useState<ShuttleAi.Client.Work.Status>('idle')
   const [inputValue, setInputValue] = useState('')
   const work = useWork()
+  const status = useWorkStatus(work)
+  const scope = useWorkAutoRunScope(work)
 
   useEffect(() => {
-    const removeListener = work.on('status', () => {
-      setStatus(work.status)
-
-      if (work.status === 'running') {
-        setInputValue('')
-      }
-    })
-
-    return removeListener
-  }, [])
+    if (status === 'running') {
+      setInputValue('')
+    }
+  }, [status])
 
   const handleSend = useCallback(() => {
     if (!inputValue) return
@@ -40,6 +35,24 @@ export default function AgentWorkAction() {
     [handleSend],
   )
 
+  const autoRunOptions = useMemo(
+    () => [
+      {
+        label: '自动执行所有',
+        value: 'always',
+      },
+      {
+        label: '自动执行只读',
+        value: 'read',
+      },
+      {
+        label: '手动执行',
+        value: 'none',
+      },
+    ],
+    [],
+  )
+
   return (
     <div className="agent-work-action">
       <Input.TextArea
@@ -51,8 +64,15 @@ export default function AgentWorkAction() {
         autoSize={false}
       />
       <div className="agent-work-action-btns">
-        <Button
+        <Select
+          style={{ minWidth: 130 }}
           disabled={status !== 'idle'}
+          value={scope}
+          options={autoRunOptions}
+          onChange={(value) => work.setAutoRunScope(value)}
+        />
+        <Button
+          disabled={status !== 'idle' || !inputValue}
           loading={status === 'pending' || status === 'running'}
           onClick={handleSend}
           type="primary"

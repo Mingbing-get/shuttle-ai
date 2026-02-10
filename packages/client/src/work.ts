@@ -1,19 +1,23 @@
 import { ShuttleAi } from '@shuttle-ai/type'
 import Agent from './agent'
 
-type ListenerType = 'status' | 'agent'
+type ListenerType = 'autoRunScope' | 'status' | 'agent'
 
 export default class Work {
   private _id: string = ''
   private _status: ShuttleAi.Client.Work.Status = 'idle'
+  private _autoRunScope: ShuttleAi.Client.Work.AutoRunScope = 'none'
 
   private agentMap: Map<string, Agent> = new Map()
   private listenerMap: Record<ListenerType, (() => void)[]> = {
+    autoRunScope: [],
     status: [],
     agent: [],
   }
 
-  constructor(readonly options: ShuttleAi.Client.Work.Options) {}
+  constructor(readonly options: ShuttleAi.Client.Work.Options) {
+    this._autoRunScope = options.autoRunScope || 'none'
+  }
 
   get id() {
     return this._id
@@ -23,10 +27,22 @@ export default class Work {
     return this._status
   }
 
+  get autoRunScope() {
+    return this._autoRunScope
+  }
+
+  setAutoRunScope(scope: ShuttleAi.Client.Work.AutoRunScope) {
+    this._autoRunScope = scope
+    this.trigger('autoRunScope')
+  }
+
   async invoke(prompt: string) {
     this.setStatus('pending')
 
-    const generator = this.options.transporter.invoke({ prompt })
+    const generator = this.options.transporter.invoke({
+      prompt,
+      autoRunScope: this._autoRunScope,
+    })
 
     for await (const data of generator) {
       if (data.type === 'startWork') {
@@ -64,6 +80,14 @@ export default class Work {
     }
   }
 
+  getAgent(id: string) {
+    return this.agentMap.get(id)
+  }
+
+  getRootAgent() {
+    return this.agentMap.get(this._id)
+  }
+
   private trigger(type: ListenerType) {
     const listeners = this.listenerMap[type]
     listeners.forEach((cb) => cb())
@@ -74,11 +98,11 @@ export default class Work {
     this.trigger('status')
   }
 
-  private addAgent(agent: Agent) {
-    if (agent.options.parentId) {
+  private addAgent(agent: Agent, belongMessageId?: string) {
+    if (agent.options.parentId && belongMessageId) {
       const parentAgent = this.agentMap.get(agent.options.parentId)
       if (parentAgent) {
-        parentAgent.addChild(agent)
+        parentAgent.addChild(agent, belongMessageId)
       }
     }
     this.agentMap.set(agent.options.id, agent)
@@ -104,11 +128,13 @@ export default class Work {
 
     reportData.data.params = {
       ...params,
-      tools: params.tools?.map((tool) => {
-        const { run, ...rest } = tool
+      tools: params.tools
+        ?.filter((tool) => !tool.extras?.disableExport)
+        ?.map((tool) => {
+          const { run, ...rest } = tool
 
-        return rest
-      }),
+          return rest
+        }),
     }
 
     const agent = new Agent({
@@ -128,7 +154,7 @@ export default class Work {
       parentId: data.parentAgentId,
       tools: params.tools,
     })
-    this.addAgent(agent)
+    this.addAgent(agent, data.beloneMessageId)
 
     return this.options.transporter.report(reportData)
   }

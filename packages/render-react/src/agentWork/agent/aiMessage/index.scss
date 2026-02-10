@@ -1,0 +1,18 @@
+.agent-work-agent-message.ai-message {
+  .ai-message-content {
+    padding: 8px;
+    border-radius: 8px;
+    background-color: rgba(175, 240, 181, 0.4);
+    box-shadow: 0 0 8px 0 rgba(0, 0, 0, 0.1);
+    & > .markdown-body {
+      background-color: transparent;
+    }
+  }
+
+  .agent-work-agent-children,
+  .agent-work-agent-tools {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+  }
+}

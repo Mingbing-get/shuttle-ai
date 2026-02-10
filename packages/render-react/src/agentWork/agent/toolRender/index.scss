@@ -1,0 +1,51 @@
+.agent-work-agent-tool {
+  display: flex;
+  flex-direction: column;
+  padding: 8px;
+  border-radius: 8px;
+  background-color: rgba(22, 119, 255, 0.2);
+  box-shadow: 0 0 8px 0 rgba(0, 0, 0, 0.1);
+  .agent-work-agent-fn-tool {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    .fn-tool-name {
+      margin: 0;
+      font-weight: bold;
+    }
+
+    .fn-tool-args {
+      margin: 0;
+      padding-top: 8px;
+      border-top: 1px solid #d9d9d9;
+    }
+
+    .fn-tool-result {
+      margin: 0;
+      padding-top: 8px;
+      border-top: 1px solid #d9d9d9;
+      &:empty {
+        display: none;
+      }
+    }
+  }
+
+  .fn-tool-confirm {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    padding-top: 8px;
+    border-top: 1px solid #d9d9d9;
+
+    .fn-tool-confirm-tip {
+      font-size: 14px;
+    }
+
+    .fn-tool-confirm-button-group {
+      display: flex;
+      align-items: center;
+      gap: 2rem;
+    }
+  }
+}

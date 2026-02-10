@@ -22,9 +22,22 @@ export default class Agent {
     this._status = options.status || 'idle'
   }
 
-  addChild(agent: Agent) {
+  addChild(agent: Agent, belongMessageId: string) {
     this._children.push(agent)
     this.trigger('subAgents', undefined)
+
+    let aiMessage: ShuttleAi.Message.AI | undefined
+    for (let i = this._messages.length - 1; i >= 0; i--) {
+      const message = this._messages[i]
+      if (message.role === 'assistant' && message.id === belongMessageId) {
+        aiMessage = message
+        break
+      }
+    }
+    if (!aiMessage) return
+
+    aiMessage.subAgentIds = [...(aiMessage.subAgentIds || []), agent.options.id]
+    this.trigger('aiMessage', aiMessage)
   }
 
   run() {
