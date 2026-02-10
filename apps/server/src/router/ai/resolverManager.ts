@@ -2,7 +2,6 @@ import { ShuttleAi } from '@shuttle-ai/type'
 
 interface AgentResolver {
   resolveConfirmTool: (id: string, value: ShuttleAi.Tool.ConfirmResult) => void
-  resolveRemoteTool: (id: string, value: any) => void
   resolveAgentStart: (
     id: string,
     value: ShuttleAi.Report.AgentStart['data']['params'],

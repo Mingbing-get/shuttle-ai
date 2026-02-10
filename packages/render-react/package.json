@@ -28,12 +28,18 @@
   },
   "dependencies": {
     "classnames": "^2.5.1",
+    "github-markdown-css": "^5.8.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "@shuttle-ai/client": "workspace:*",
     "@shuttle-ai/type": "workspace:*",
     "antd": "^6.1.1",
-    "@ant-design/icons": "^6.1.0"
+    "@ant-design/icons": "^6.1.0",
+    "react-markdown": "^10.1.0",
+    "rehype-raw": "^7.0.0",
+    "remark-breaks": "^4.0.0",
+    "remark-frontmatter": "^5.0.0",
+    "remark-gfm": "^4.0.1"
   },
   "devDependencies": {
     "typescript": "^5.3.3",

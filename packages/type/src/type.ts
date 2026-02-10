@@ -70,6 +70,7 @@ export namespace ShuttleAi {
 
     export interface AITool extends Base<'assistant_tool'> {
       toolCall: Tool.Call
+      needConfirm: boolean
     }
 
     export interface User extends Base<'user'> {
@@ -122,16 +123,6 @@ export namespace ShuttleAi {
       { toolPath: Tool.Path; toolResult: any }
     > {}
 
-    export interface RunRemoteTool extends Base<
-      'runRemoteTool',
-      { runId: string; toolName: string; args?: Record<string, any> }
-    > {}
-
-    export interface ToolConfirm extends Base<
-      'toolConfirm',
-      { toolPath: Tool.Path }
-    > {}
-
     export interface StartWork extends Base<'startWork', { workId: string }> {}
 
     export interface EndWork extends Base<'endWork', { workId: string }> {}
@@ -145,8 +136,6 @@ export namespace ShuttleAi {
       | AgentEnd
       | ToolStart
       | ToolEnd
-      | RunRemoteTool
-      | ToolConfirm
   }
 
   export namespace Report {
@@ -161,11 +150,6 @@ export namespace ShuttleAi {
       { toolId: string; result: ShuttleAi.Tool.ConfirmResult }
     > {}
 
-    export interface ToolResult extends Base<
-      'toolResult',
-      { id: string; result: any }
-    > {}
-
     export interface AgentStart extends Base<
       'agentStart',
       {
@@ -178,6 +162,6 @@ export namespace ShuttleAi {
       }
     > {}
 
-    export type Define = ConfirmTool | ToolResult | AgentStart
+    export type Define = ConfirmTool | AgentStart
   }
 }

@@ -5,13 +5,11 @@ export default class HttpTransporter
   extends BaseHttpTransporter
   implements ShuttleAi.Client.Transporter
 {
-  private subscribeList: ((data: ShuttleAi.Ask.Define) => void)[] = []
-
   constructor(private options?: ShuttleAi.Client.HttpTransporterOptions) {
     super(options)
   }
 
-  async invoke(data: ShuttleAi.Client.StartWork) {
+  async *invoke(data: ShuttleAi.Client.StartWork) {
     let path = this.options?.invoke?.path || '/invoke'
     if (!path.startsWith('/')) {
       path = `/${path}`
@@ -45,7 +43,9 @@ export default class HttpTransporter
         const chunk = decoder.decode(value)
 
         const data = this.mergeChunkContent(this.parseJsonStream(chunk))
-        data.forEach((item) => this.trigger(item))
+        for (const item of data) {
+          yield item
+        }
       } catch (error) {
         break
       }
@@ -89,21 +89,9 @@ export default class HttpTransporter
     }, [])
   }
 
-  private trigger(data: ShuttleAi.Ask.Define) {
-    this.subscribeList.forEach((item) => item(data))
-  }
-
   async report(data: ShuttleAi.Report.Define) {
     await this.request(this.options?.report, data, {
       defaultPath: '/report',
     })
-  }
-
-  on(cb: (data: ShuttleAi.Ask.Define) => void) {
-    this.subscribeList.push(cb)
-
-    return () => {
-      this.subscribeList = this.subscribeList.filter((item) => item !== cb)
-    }
   }
 }

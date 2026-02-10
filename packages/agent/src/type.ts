@@ -52,14 +52,9 @@ declare module '@shuttle-ai/type' {
           options: ShuttleAi.Ask.AgentStart['data'],
         ) => Promise<ToolsWithSubAgents & Omit<CreateAgentParams, 'tools'>>
         onAgentEnd?: (agentId: string) => void
-        onToolStart?: (tool: ShuttleAi.Message.AITool) => void
-        onToolConfirm?: (
-          toolPath: ShuttleAi.Tool.Path,
+        onToolStart: (
+          tool: ShuttleAi.Message.AITool,
         ) => Promise<ShuttleAi.Tool.ConfirmResult>
-        onRunRemoteTool?: (
-          toolName: string,
-          args?: Record<string, any>,
-        ) => Promise<any>
         onToolEnd?: (toolPath: ShuttleAi.Tool.Path, result: any) => void
       }
     }

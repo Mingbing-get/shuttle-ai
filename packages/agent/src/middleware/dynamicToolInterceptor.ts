@@ -17,6 +17,8 @@ const dynamicToolInterceptorMiddleware = createMiddleware({
     if (request.tool instanceof DynamicTool) {
       const extras = (request.tool.extras as ShuttleAi.Tool.Extras) || {}
       if (!extras.skipReport) {
+        const needConfirm = !checkAutoRunTool(extras, context._agentCluster)
+
         const aiMessage = context._agentCluster.getLastAiMessage(
           context._agentId,
         )
@@ -25,46 +27,37 @@ const dynamicToolInterceptorMiddleware = createMiddleware({
           (toolCall) => toolCall.id === request.toolCall.id,
         )
 
-        context._agentCluster.options.hooks.onToolStart?.({
+        const res = await context._agentCluster.options.hooks.onToolStart({
           role: 'assistant_tool',
           toolCall: toolCall as any,
+          needConfirm: extras.remote || needConfirm,
           id: aiMessage?.id || '',
           agentId: context._agentId,
           workId: context._agentCluster.id,
           parentAgentId: context._parentAgentId,
         })
 
+        if (
+          res.type === 'reject' ||
+          (res.type === 'confirm' && extras.remote)
+        ) {
+          return new ToolMessage({
+            content: res.reason || 'can not run tool',
+            tool_call_id: request.toolCall.id || '',
+          })
+        }
+
+        if (res.type === 'confirmWithResult') {
+          return new ToolMessage({
+            content: res.result || 'success',
+            tool_call_id: request.toolCall.id || '',
+          })
+        }
+
         const toolPath: ShuttleAi.Tool.Path = {
           agentId: context._agentId,
           messageId: aiMessage?.id || '',
           toolId: request.toolCall.id || '',
-        }
-
-        // 判断是否需要确认
-        if (!checkAutoRunTool(extras, context._agentCluster)) {
-          const onToolConfirm =
-            context._agentCluster.options.hooks.onToolConfirm
-          if (!onToolConfirm) {
-            return new ToolMessage({
-              content: 'can not run tool',
-              tool_call_id: request.toolCall.id || '',
-            })
-          }
-
-          const res = await onToolConfirm(toolPath)
-          if (res.type === 'reject') {
-            return new ToolMessage({
-              content: res.reason || 'can not run tool',
-              tool_call_id: request.toolCall.id || '',
-            })
-          }
-
-          if (res.type === 'confirmWithResult') {
-            return new ToolMessage({
-              content: res.result || 'success',
-              tool_call_id: request.toolCall.id || '',
-            })
-          }
         }
 
         const toolMessage = await handle(request)

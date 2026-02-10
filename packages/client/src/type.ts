@@ -6,11 +6,23 @@ declare module '@shuttle-ai/type' {
   export namespace ShuttleAi {
     export namespace Client {
       export namespace Agent {
+        export type Status = 'idle' | 'running'
+
         export interface Options {
           id: string
           work: Work
+          status?: Status
+          history?: Message.Define[]
           parentId?: string
           tools?: WithRunTool[]
+        }
+
+        export interface EventMap {
+          status: Status
+          messages: Message.Define[]
+          subAgents: undefined
+          aiMessage: Message.AI
+          toolMessage: Message.Tool
         }
 
         export interface FnTool {
@@ -35,7 +47,7 @@ declare module '@shuttle-ai/type' {
       }
 
       export namespace Work {
-        export type Status = 'idle' | 'pending' | 'running' | 'completed'
+        export type Status = 'idle' | 'pending' | 'running'
 
         export interface Options {
           transporter: Transporter
@@ -51,9 +63,10 @@ declare module '@shuttle-ai/type' {
       }
 
       export interface Transporter {
-        invoke: (data: StartWork) => Promise<void>
+        invoke: (
+          data: StartWork,
+        ) => AsyncGenerator<ShuttleAi.Ask.Define, void, unknown>
         report: (data: Report.Define) => Promise<void>
-        on: (cb: (data: Ask.Define) => void) => () => void
       }
 
       export interface HttpTransporterOptions extends NHttpTransporter.Options {

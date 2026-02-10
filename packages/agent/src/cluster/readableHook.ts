@@ -1,5 +1,4 @@
 import { Readable } from 'stream'
-import { randomUUID } from 'crypto'
 import { ShuttleAi } from '@shuttle-ai/type'
 import { CreateAgentParams } from 'langchain'
 
@@ -14,7 +13,6 @@ export default function createReadableHook(
     string,
     (value: ShuttleAi.Report.AgentStart['data']['params']) => void
   > = {}
-  const remoteToolResolver: Record<string, (value: any) => void> = {}
   const confirmToolResolver: Record<
     string,
     (value: ShuttleAi.Tool.ConfirmResult) => void
@@ -38,15 +36,6 @@ export default function createReadableHook(
   function close() {
     stream.push(null)
     clearInterval(interval)
-  }
-
-  function resolveRemoteTool(id: string, value: any) {
-    if (!remoteToolResolver[id]) {
-      throw new Error(`not find remote tool resolver: ${id}`)
-    }
-
-    remoteToolResolver[id](value)
-    delete remoteToolResolver[id]
   }
 
   function resolveConfirmTool(id: string, value: ShuttleAi.Tool.ConfirmResult) {
@@ -107,29 +96,23 @@ export default function createReadableHook(
     onAgentEnd(agentId) {
       send({ type: 'agentEnd', data: { agentId } })
     },
-    onToolStart(tool) {
+    async onToolStart(tool) {
       send({ type: 'toolStart', data: { tool } })
+
+      if (tool.needConfirm) {
+        const { resolve, promise } =
+          Promise.withResolvers<ShuttleAi.Tool.ConfirmResult>()
+        confirmToolResolver[tool.toolCall.id] = resolve
+
+        return promise
+      }
+
+      return {
+        type: 'confirm',
+      }
     },
     onToolEnd(toolPath, toolResult) {
       send({ type: 'toolEnd', data: { toolPath, toolResult } })
-    },
-    async onRunRemoteTool(toolName, args) {
-      const runId = randomUUID()
-      send({ type: 'runRemoteTool', data: { runId, toolName, args } })
-
-      const { resolve, promise } = Promise.withResolvers<any>()
-      remoteToolResolver[runId] = resolve
-
-      return promise
-    },
-    async onToolConfirm(toolPath) {
-      send({ type: 'toolConfirm', data: { toolPath } })
-
-      const { resolve, promise } =
-        Promise.withResolvers<ShuttleAi.Tool.ConfirmResult>()
-      confirmToolResolver[toolPath.messageId] = resolve
-
-      return promise
     },
   }
 
@@ -138,7 +121,6 @@ export default function createReadableHook(
     stream,
     send,
     close,
-    resolveRemoteTool,
     resolveConfirmTool,
     resolveAgentStart,
   }

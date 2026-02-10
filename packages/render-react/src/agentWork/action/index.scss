@@ -1,0 +1,32 @@
+.agent-work-action {
+  display: flex;
+  flex-direction: column;
+  border-radius: 8px;
+  border: 1px solid #d9d9d9;
+
+  &:has(:focus) {
+    border-color: #1677ff;
+    box-shadow: 0 0 4px 0 #4096ffaa;
+  }
+
+  &:has(.agent-work-action-input.ant-input-disabled) {
+    background-color: #0000000a;
+  }
+  .agent-work-action-input.ant-input-disabled {
+    background-color: transparent;
+  }
+
+  .agent-work-action-input {
+    border: none;
+    outline: none;
+    box-shadow: none;
+    resize: none;
+  }
+
+  .agent-work-action-btns {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    padding: 4px 11px;
+  }
+}

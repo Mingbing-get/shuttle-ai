@@ -17,40 +17,33 @@ const invoke: Middleware = async (ctx) => {
   ctx.set('Connection', 'keep-alive')
   ctx.status = 200
 
-  const {
-    stream,
-    hooks,
-    send,
-    close,
-    resolveConfirmTool,
-    resolveRemoteTool,
-    resolveAgentStart,
-  } = readableHook(async (name) => {
-    const model = new ChatOpenAI({
-      modelName: process.env.OPENAI_DEFAULT_MODEL,
-      apiKey: process.env.OPENAI_API_KEY,
-      configuration: {
-        baseURL: process.env.OPENAI_API_URL,
-      },
-      streaming: true,
+  const { stream, hooks, send, close, resolveConfirmTool, resolveAgentStart } =
+    readableHook(async (name) => {
+      const model = new ChatOpenAI({
+        modelName: process.env.OPENAI_DEFAULT_MODEL,
+        apiKey: process.env.OPENAI_API_KEY,
+        configuration: {
+          baseURL: process.env.OPENAI_API_URL,
+        },
+        streaming: true,
+      })
+
+      try {
+        const configName = name.split('_')[0]
+        const config = await import(
+          resolve(process.cwd(), `./src/agent/${configName}`)
+        )
+
+        return {
+          ...config.default,
+          model,
+        }
+      } catch (error) {
+        return {
+          model,
+        }
+      }
     })
-
-    try {
-      const configName = name.split('_')[0]
-      const config = await import(
-        resolve(process.cwd(), `./src/agent/${configName}`)
-      )
-
-      return {
-        ...config.default,
-        model,
-      }
-    } catch (error) {
-      return {
-        model,
-      }
-    }
-  })
 
   const agentCluster = new AgentCluster({
     hooks: hooks,
@@ -58,7 +51,6 @@ const invoke: Middleware = async (ctx) => {
 
   resolverManager.addAgentResolver(agentCluster.id, {
     resolveConfirmTool,
-    resolveRemoteTool,
     resolveAgentStart,
   })
 

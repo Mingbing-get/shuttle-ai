@@ -121,7 +121,7 @@ export default class AgentCluster extends Runnable {
 
   customToolToDynamicTool(_tool: ShuttleAi.Tool.Define) {
     return tool((args?: Record<string, any>) => {
-      return this.options.hooks.onRunRemoteTool?.(_tool.name, args)
+      return ''
     }, _tool as any)
   }
 
