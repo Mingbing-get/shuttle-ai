@@ -1,6 +1,6 @@
 import { createMiddleware } from 'langchain'
-import { DynamicTool } from '@langchain/core/tools'
-import { ToolMessage } from '@langchain/core/messages'
+import { DynamicTool, DynamicStructuredTool } from '@langchain/core/tools'
+import { AIMessageChunk, ToolMessage } from '@langchain/core/messages'
 import { ShuttleAi } from '@shuttle-ai/type'
 
 import AgentCluster from '../cluster/instance'
@@ -14,7 +14,10 @@ const dynamicToolInterceptorMiddleware = createMiddleware({
       _parentAgentId?: string
     }
 
-    if (request.tool instanceof DynamicTool) {
+    if (
+      request.tool instanceof DynamicTool ||
+      request.tool instanceof DynamicStructuredTool
+    ) {
       const extras = (request.tool.extras as ShuttleAi.Tool.Extras) || {}
       if (!extras.skipReport) {
         const needConfirm = !checkAutoRunTool(extras, context._agentCluster)
@@ -49,7 +52,10 @@ const dynamicToolInterceptorMiddleware = createMiddleware({
 
         if (res.type === 'confirmWithResult') {
           return new ToolMessage({
-            content: res.result || 'success',
+            content:
+              typeof res.result === 'object'
+                ? JSON.stringify(res.result)
+                : res.result || 'success',
             tool_call_id: request.toolCall.id || '',
           })
         }
@@ -58,6 +64,19 @@ const dynamicToolInterceptorMiddleware = createMiddleware({
           agentId: context._agentId,
           messageId: aiMessage?.id || '',
           toolId: request.toolCall.id || '',
+        }
+
+        if (res.newArgs) {
+          request.toolCall.args = res.newArgs
+          const lastMessage = request.state.messages[
+            request.state.messages.length - 1
+          ] as AIMessageChunk
+          const tool = lastMessage.tool_calls?.find(
+            (tool) => tool.id === request.toolCall.id,
+          )
+          if (tool) {
+            tool.args = res.newArgs
+          }
         }
 
         const toolMessage = await handle(request)

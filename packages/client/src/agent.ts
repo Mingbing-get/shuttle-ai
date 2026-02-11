@@ -26,14 +26,7 @@ export default class Agent {
     this._children.push(agent)
     this.trigger('subAgents', undefined)
 
-    let aiMessage: ShuttleAi.Message.AI | undefined
-    for (let i = this._messages.length - 1; i >= 0; i--) {
-      const message = this._messages[i]
-      if (message.role === 'assistant' && message.id === belongMessageId) {
-        aiMessage = message
-        break
-      }
-    }
+    const aiMessage = this.findAiMessageById(belongMessageId)
     if (!aiMessage) return
 
     aiMessage.subAgentIds = [...(aiMessage.subAgentIds || []), agent.options.id]
@@ -69,14 +62,7 @@ export default class Agent {
   }
 
   addToolCall(aiTool: ShuttleAi.Message.AITool) {
-    let aiMessage: ShuttleAi.Message.AI | undefined
-    for (let i = this._messages.length - 1; i >= 0; i--) {
-      const message = this._messages[i]
-      if (message.role === 'assistant' && message.id === aiTool.id) {
-        aiMessage = message
-        break
-      }
-    }
+    const aiMessage = this.findAiMessageById(aiTool.id)
     if (!aiMessage) return
 
     aiMessage.toolCalls = [...(aiMessage.toolCalls || []), aiTool.toolCall]
@@ -84,6 +70,7 @@ export default class Agent {
       role: 'tool',
       name: aiTool.toolCall.name,
       id: aiTool.toolCall.id,
+      aiMessageId: aiTool.id,
       agentId: this.options.id,
       workId: this.options.work.id,
       parentAgentId: this.options.parentId,
@@ -98,14 +85,7 @@ export default class Agent {
   }
 
   endTool(info: ShuttleAi.Ask.ToolEnd['data']) {
-    let toolMessage: ShuttleAi.Message.Tool | undefined
-    for (let i = this._messages.length - 1; i >= 0; i--) {
-      const message = this._messages[i]
-      if (message.role === 'tool' && message.id === info.toolPath.toolId) {
-        toolMessage = message
-        break
-      }
-    }
+    const toolMessage = this.findToolMessageById(info.toolPath.toolId)
     if (!toolMessage) return
 
     toolMessage.content = info.toolResult
@@ -116,15 +96,25 @@ export default class Agent {
     toolId: string,
     confirmResult: ShuttleAi.Tool.ConfirmResult,
   ) {
-    let toolMessage: ShuttleAi.Message.Tool | undefined
-    for (let i = this._messages.length - 1; i >= 0; i--) {
-      const message = this._messages[i]
-      if (message.role === 'tool' && message.id === toolId) {
-        toolMessage = message
-        break
+    const toolMessage = this.findToolMessageById(toolId)
+    if (!toolMessage) return
+
+    const aiMessage = this.findAiMessageById(toolMessage.aiMessageId)
+    if (!aiMessage) return
+
+    if (confirmResult.type !== 'reject') {
+      const toolDefine = this.options.tools?.find(
+        (tool) => tool.name === toolMessage.name,
+      )
+      if (toolDefine?.run.type === 'fn') {
+        const toolCall = aiMessage.toolCalls?.find(
+          (call) => call.id === toolMessage.id,
+        )
+
+        confirmResult.result = await this.runTool(toolDefine.run.fn, toolCall)
+        confirmResult.type = 'confirmWithResult'
       }
     }
-    if (!toolMessage) return
 
     await this.options.work.options.transporter.report({
       type: 'toolConfirm',
@@ -137,6 +127,53 @@ export default class Agent {
 
     toolMessage.confirm = confirmResult
     this.trigger('toolMessage', toolMessage)
+  }
+
+  findToolMessageById(toolId: string) {
+    let toolMessage: ShuttleAi.Message.Tool | undefined
+    for (let i = this._messages.length - 1; i >= 0; i--) {
+      const message = this._messages[i]
+      if (message.role === 'tool' && message.id === toolId) {
+        toolMessage = message
+        break
+      }
+    }
+
+    return toolMessage
+  }
+
+  findAiMessageById(aiId: string) {
+    let aiMessage: ShuttleAi.Message.AI | undefined
+    for (let i = this._messages.length - 1; i >= 0; i--) {
+      const message = this._messages[i]
+      if (message.role === 'assistant' && message.id === aiId) {
+        aiMessage = message
+        break
+      }
+    }
+
+    return aiMessage
+  }
+
+  private async runTool(
+    fn: (args: any) => Promise<any>,
+    toolCall?: ShuttleAi.Tool.Call,
+  ) {
+    if (!toolCall) {
+      return {
+        status: 'error',
+        message: 'toolCall is required',
+      }
+    }
+
+    try {
+      return await fn(toolCall.args || {})
+    } catch (error) {
+      return {
+        status: 'error',
+        message: (error as Error).message,
+      }
+    }
   }
 
   private trigger<K extends keyof ShuttleAi.Client.Agent.EventMap>(

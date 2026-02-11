@@ -59,6 +59,7 @@ export default class MessageCollector extends BaseCallbackHandler {
       name: output.name || '',
       content: output.content as string,
       id: output.tool_call_id || randomUUID(),
+      aiMessageId: '',
       agentId: this.options.agentId,
       workId: this.options.agentCluster.id,
       parentAgentId: this.options.parentAgentId,

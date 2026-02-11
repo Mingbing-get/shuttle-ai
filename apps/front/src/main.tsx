@@ -1,6 +1,8 @@
 import { HttpTransporter } from '@shuttle-ai/client'
 import { AgentWorkProvider, AgentWorkRender } from '@shuttle-ai/render-react'
 
+import initAgent from './initAgent'
+
 const transporter = new HttpTransporter({
   baseUrl: 'http://localhost:3101/ai',
   requestHeaders: {
@@ -10,7 +12,7 @@ const transporter = new HttpTransporter({
 
 export default function Main() {
   return (
-    <AgentWorkProvider transporter={transporter}>
+    <AgentWorkProvider transporter={transporter} initAgent={initAgent}>
       <AgentWorkRender
         style={{
           boxSizing: 'border-box',

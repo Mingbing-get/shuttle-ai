@@ -130,7 +130,7 @@ export default class AgentCluster extends Runnable {
     agentId: string,
   ) {
     return tool(
-      async (params: { subAgentName: string; request: string }, options) => {
+      async (params: { subAgentName: string; request: string }) => {
         const subAgent = subAgents.find(
           (agent) => agent.name === params.subAgentName,
         )
@@ -148,6 +148,12 @@ export default class AgentCluster extends Runnable {
           content: params.request,
         })
         const agent = this.createAgent(createAgentParams, currentAgentId)
+        if (parentLastAiMessage) {
+          parentLastAiMessage.subAgentIds = [
+            ...(parentLastAiMessage.subAgentIds || []),
+            currentAgentId,
+          ]
+        }
 
         this.addMessage({
           id: randomUUID(),

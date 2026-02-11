@@ -84,6 +84,7 @@ export namespace ShuttleAi {
     }
 
     export interface Tool extends Base<'tool'> {
+      aiMessageId: string
       name: string
       content?: string
       confirm?: Tool.ConfirmResult
