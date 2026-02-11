@@ -29,7 +29,9 @@ export default function ToolRender({ toolCall }: Props) {
         <div className="agent-work-agent-fn-tool">
           <p className="fn-tool-name">{toolCall.name}</p>
           <pre className="fn-tool-args">{formatJson(toolCall.args)}</pre>
-          <pre className="fn-tool-result">{formatJson(message.content)}</pre>
+          <pre className="fn-tool-result">
+            {formatJson(message.content || message.confirm?.result)}
+          </pre>
           <ConfirmRender
             result={message.confirm}
             toolId={toolCall.id}

@@ -82,6 +82,12 @@ export default class Agent {
     })
     this.trigger('aiMessage', aiMessage)
     this.trigger('messages', this._messages)
+
+    if (!aiTool.needConfirm) return
+
+    if (!this.checkAutoRun(aiTool.toolCall.name)) return
+
+    this.confirmTool(aiTool.toolCall.id, { type: 'confirm' })
   }
 
   endTool(info: ShuttleAi.Ask.ToolEnd['data']) {
@@ -153,6 +159,25 @@ export default class Agent {
     }
 
     return aiMessage
+  }
+
+  private checkAutoRun(toolName: string) {
+    const toolDefine = this.options.tools?.find(
+      (tool) => tool.name === toolName,
+    )
+    if (!toolDefine) return false
+
+    if (toolDefine.extras?.onlyShow || toolDefine.extras?.scope === 'autoRun') {
+      return true
+    }
+
+    if (this.options.work.autoRunScope === 'always') return true
+
+    if (this.options.work.autoRunScope === 'read') {
+      return toolDefine.extras?.scope === 'read'
+    }
+
+    return false
   }
 
   private async runTool(

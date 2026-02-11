@@ -7,6 +7,7 @@ declare module '@shuttle-ai/type' {
     export namespace Tool {
       export interface Extras {
         disableExport?: boolean
+        onlyShow?: boolean
       }
     }
 
