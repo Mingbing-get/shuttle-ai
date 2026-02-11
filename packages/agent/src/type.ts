@@ -56,6 +56,7 @@ declare module '@shuttle-ai/type' {
           tool: ShuttleAi.Message.AITool,
         ) => Promise<ShuttleAi.Tool.ConfirmResult>
         onToolEnd?: (toolPath: ShuttleAi.Tool.Path, result: any) => void
+        onMessage?: (message: ShuttleAi.Message.Define) => void
       }
     }
   }

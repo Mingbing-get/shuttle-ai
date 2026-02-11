@@ -2,12 +2,21 @@ import { Readable } from 'stream'
 import { ShuttleAi } from '@shuttle-ai/type'
 import { CreateAgentParams } from 'langchain'
 
+interface ReadableHookLink extends Omit<
+  ShuttleAi.Cluster.Hooks,
+  'onAgentStart' | 'onToolStart'
+> {
+  onAgentStart?: (options: ShuttleAi.Ask.AgentStart['data']) => void
+  onToolStart?: (tool: ShuttleAi.Message.AITool) => void
+}
+
 export default function createReadableHook(
   getAgentParamsFromServer: (
     agentName: string,
   ) => Promise<
     ShuttleAi.Cluster.ToolsWithSubAgents & Omit<CreateAgentParams, 'tools'>
   >,
+  hookLinks?: ReadableHookLink[],
 ) {
   const initAgentResolver: Record<
     string,
@@ -61,9 +70,11 @@ export default function createReadableHook(
 
   const hooks: ShuttleAi.Cluster.Hooks = {
     onChunk(chunk) {
+      triggerHookLinks('onChunk', [chunk], hookLinks)
       send({ type: 'chunk', data: { chunk } })
     },
     async onAgentStart(options) {
+      triggerHookLinks('onAgentStart', [options], hookLinks)
       send({
         type: 'agentStart',
         data: options,
@@ -102,9 +113,11 @@ export default function createReadableHook(
       }
     },
     onAgentEnd(agentId) {
+      triggerHookLinks('onAgentEnd', [agentId], hookLinks)
       send({ type: 'agentEnd', data: { agentId } })
     },
     async onToolStart(tool) {
+      triggerHookLinks('onToolStart', [tool], hookLinks)
       send({ type: 'toolStart', data: { tool } })
 
       if (tool.needConfirm) {
@@ -120,7 +133,11 @@ export default function createReadableHook(
       }
     },
     onToolEnd(toolPath, toolResult) {
+      triggerHookLinks('onToolEnd', [toolPath, toolResult], hookLinks)
       send({ type: 'toolEnd', data: { toolPath, toolResult } })
+    },
+    onMessage(message) {
+      triggerHookLinks('onMessage', [message], hookLinks)
     },
   }
 
@@ -132,4 +149,12 @@ export default function createReadableHook(
     resolveConfirmTool,
     resolveAgentStart,
   }
+}
+
+function triggerHookLinks<N extends keyof ReadableHookLink>(
+  name: N,
+  args: Parameters<Required<ReadableHookLink>[N]>,
+  hooks?: ReadableHookLink[],
+) {
+  hooks?.forEach((hook) => (hook[name] as any)?.(...args))
 }

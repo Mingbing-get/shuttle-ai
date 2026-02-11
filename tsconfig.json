@@ -18,5 +18,5 @@
     "jsx": "react-jsx",
     "baseUrl": "."
   },
-  "include": ["vite.config.ts", "packages/**/*"]
+  "include": ["vite.config.ts", "packages/**/*", "apps/**/*"]
 }

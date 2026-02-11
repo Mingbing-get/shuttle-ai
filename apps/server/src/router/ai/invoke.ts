@@ -1,4 +1,5 @@
 import 'dotenv/config'
+import { CreateAgentParams } from 'langchain'
 import { ChatOpenAI } from '@langchain/openai'
 import { Middleware } from '@koa/router'
 import { ShuttleAi } from '@shuttle-ai/type'
@@ -6,6 +7,37 @@ import { AgentCluster, readableHook } from '@shuttle-ai/agent'
 import { resolve } from 'path'
 
 import resolverManager from './resolverManager'
+
+async function loadAgent(
+  name: string,
+): Promise<
+  ShuttleAi.Cluster.ToolsWithSubAgents & Omit<CreateAgentParams, 'tools'>
+> {
+  const model = new ChatOpenAI({
+    modelName: process.env.OPENAI_DEFAULT_MODEL,
+    apiKey: process.env.OPENAI_API_KEY,
+    configuration: {
+      baseURL: process.env.OPENAI_API_URL,
+    },
+    streaming: true,
+  })
+
+  try {
+    const configName = name.split('_')[0]
+    const config = await import(
+      resolve(process.cwd(), `./src/agent/${configName}`)
+    )
+
+    return {
+      ...config.default,
+      model,
+    }
+  } catch (error) {
+    return {
+      model,
+    }
+  }
+}
 
 const invoke: Middleware = async (ctx) => {
   const { workId, prompt, autoRunScope } = ctx.request.body as {
@@ -21,32 +53,7 @@ const invoke: Middleware = async (ctx) => {
   ctx.status = 200
 
   const { stream, hooks, send, close, resolveConfirmTool, resolveAgentStart } =
-    readableHook(async (name) => {
-      const model = new ChatOpenAI({
-        modelName: process.env.OPENAI_DEFAULT_MODEL,
-        apiKey: process.env.OPENAI_API_KEY,
-        configuration: {
-          baseURL: process.env.OPENAI_API_URL,
-        },
-        streaming: true,
-      })
-
-      try {
-        const configName = name.split('_')[0]
-        const config = await import(
-          resolve(process.cwd(), `./src/agent/${configName}`)
-        )
-
-        return {
-          ...config.default,
-          model,
-        }
-      } catch (error) {
-        return {
-          model,
-        }
-      }
-    })
+    readableHook(loadAgent)
 
   const agentCluster = new AgentCluster({
     id: workId,

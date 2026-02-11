@@ -10,6 +10,7 @@ import { MessageCollector } from '../callback'
 
 export default class AgentCluster extends Runnable {
   static MAIN_AGENT_NAME = 'main_agent'
+  static CALL_SUB_AGENT_NAME = 'call_sub_agent'
 
   readonly lc_namespace = ['shuttle-ai', 'agent', 'cluster']
   readonly id: string
@@ -29,6 +30,7 @@ export default class AgentCluster extends Runnable {
 
   addMessage(message: ShuttleAi.Message.Define) {
     this.messages.push(message)
+    this.options.hooks.onMessage?.(message)
   }
 
   async invoke(input: string, options?: any): Promise<string> {
@@ -130,7 +132,7 @@ export default class AgentCluster extends Runnable {
     agentId: string,
   ) {
     return tool(
-      async (params: { subAgentName: string; request: string }) => {
+      async (params: { subAgentName: string; request: string }, request) => {
         const subAgent = subAgents.find(
           (agent) => agent.name === params.subAgentName,
         )
@@ -139,7 +141,7 @@ export default class AgentCluster extends Runnable {
         }
 
         const parentLastAiMessage = this.getLastAiMessage(agentId)
-        const currentAgentId = randomUUID()
+        const currentAgentId: string = request.toolCall.id
         const createAgentParams = await this.options.hooks.onAgentStart({
           agentId: currentAgentId,
           agentName: params.subAgentName,
@@ -148,12 +150,6 @@ export default class AgentCluster extends Runnable {
           content: params.request,
         })
         const agent = this.createAgent(createAgentParams, currentAgentId)
-        if (parentLastAiMessage) {
-          parentLastAiMessage.subAgentIds = [
-            ...(parentLastAiMessage.subAgentIds || []),
-            currentAgentId,
-          ]
-        }
 
         this.addMessage({
           id: randomUUID(),
@@ -192,7 +188,7 @@ export default class AgentCluster extends Runnable {
         return lastAiMessage?.content || ''
       },
       {
-        name: 'call_sub_agent',
+        name: AgentCluster.CALL_SUB_AGENT_NAME,
         description: `Call a sub-agent to handle the user request.
       The sub-agents are: 
       ${subAgents.map((agent) => `- ${agent.name}: ${agent.description}`).join('\n')}
@@ -218,5 +214,9 @@ export default class AgentCluster extends Runnable {
         return message
       }
     }
+  }
+
+  getMessages() {
+    return this.messages
   }
 }
