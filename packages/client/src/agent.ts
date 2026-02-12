@@ -61,7 +61,6 @@ export default class Agent {
         id: chunk.id,
         agentId: this.options.id,
         workId: this.options.work.id,
-        parentAgentId: this.options.parentId,
       })
       this.trigger('messages', this._messages)
     }
@@ -91,7 +90,6 @@ export default class Agent {
       aiMessageId: aiTool.id,
       agentId: this.options.id,
       workId: this.options.work.id,
-      parentAgentId: this.options.parentId,
       confirm: aiTool.needConfirm
         ? undefined
         : {

@@ -11,7 +11,6 @@ import { AgentCluster } from '../cluster'
 interface Options {
   agentCluster: AgentCluster
   agentId: string
-  parentAgentId?: string
 }
 
 export default class LLMMessage extends BaseCallbackHandler {
@@ -30,7 +29,6 @@ export default class LLMMessage extends BaseCallbackHandler {
       id: runId,
       agentId: this.options.agentId,
       workId: this.options.agentCluster.id,
-      parentAgentId: this.options.parentAgentId,
     })
   }
 
@@ -58,7 +56,6 @@ export default class LLMMessage extends BaseCallbackHandler {
       subAgents,
       agentId: this.options.agentId,
       workId: this.options.agentCluster.id,
-      parentAgentId: this.options.parentAgentId,
     })
   }
 }

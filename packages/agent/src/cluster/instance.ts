@@ -155,7 +155,6 @@ export default class AgentCluster extends Runnable {
           id: randomUUID(),
           workId: this.id,
           agentId: currentAgentId,
-          parentAgentId: agentId,
           role: 'user',
           content: params.request,
         })
@@ -175,7 +174,6 @@ export default class AgentCluster extends Runnable {
               new LLMMessage({
                 agentCluster: this,
                 agentId: currentAgentId,
-                parentAgentId: agentId,
               }),
             ],
           },

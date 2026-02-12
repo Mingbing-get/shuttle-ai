@@ -61,7 +61,6 @@ export namespace ShuttleAi {
       id: string
       agentId: string
       workId: string
-      parentAgentId?: string
     }
 
     export interface AIChunk extends Base<'assistant_chunk'> {

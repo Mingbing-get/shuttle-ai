@@ -21,7 +21,6 @@ const dynamicToolInterceptorMiddleware = createMiddleware({
       aiMessageId: '',
       agentId: context._agentId,
       workId: context._agentCluster.id,
-      parentAgentId: context._parentAgentId,
     }
     let toolMessage: UnpackPromise<ReturnType<typeof handle>>
 
@@ -49,7 +48,6 @@ const dynamicToolInterceptorMiddleware = createMiddleware({
           id: aiMessage?.id || '',
           agentId: context._agentId,
           workId: context._agentCluster.id,
-          parentAgentId: context._parentAgentId,
         })
         reportToolMessage.confirm = res
 

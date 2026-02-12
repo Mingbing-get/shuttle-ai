@@ -198,7 +198,6 @@ export default class Work {
       id: new Date().toISOString(),
       agentId: data.agentId,
       workId: this._id,
-      parentAgentId: data.parentAgentId,
     }
     const agent = this.agentMap.get(data.agentId)
     if (!agent) {
