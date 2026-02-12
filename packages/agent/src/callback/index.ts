@@ -1,1 +1,1 @@
-export { default as MessageCollector } from './messageCollector'
+export { default as LLMMessage } from './LLMMessage'

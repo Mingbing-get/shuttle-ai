@@ -1,0 +1,51 @@
+[
+  {
+    "id": "c56ae8ab-99fd-4668-814c-5f5efd6f314f",
+    "workId": "3f58cc5b-d865-4551-abe3-5ed4b4662b5c",
+    "agentId": "call_smpnns23k8b697ti76olulyo",
+    "parentAgentId": "3f58cc5b-d865-4551-abe3-5ed4b4662b5c",
+    "role": "user",
+    "content": "请列出当前所有的数据模型信息"
+  },
+  {
+    "role": "assistant",
+    "content": "我来帮您查询当前所有的数据模型信息。",
+    "toolCalls": [
+      {
+        "id": "call_hf2ucf17kmw6pr9t62v6wvc5",
+        "name": "query_model",
+        "args": {
+          "input": "列出所有数据模型"
+        }
+      }
+    ],
+    "id": "019c4fcc-7f61-7000-8000-0c9c92d4e818",
+    "subAgents": [],
+    "agentId": "call_smpnns23k8b697ti76olulyo",
+    "workId": "3f58cc5b-d865-4551-abe3-5ed4b4662b5c",
+    "parentAgentId": "3f58cc5b-d865-4551-abe3-5ed4b4662b5c"
+  },
+  {
+    "role": "tool",
+    "name": "query_model",
+    "id": "call_hf2ucf17kmw6pr9t62v6wvc5",
+    "aiMessageId": "019c4fcc-7f61-7000-8000-0c9c92d4e818",
+    "agentId": "call_smpnns23k8b697ti76olulyo",
+    "workId": "3f58cc5b-d865-4551-abe3-5ed4b4662b5c",
+    "parentAgentId": "3f58cc5b-d865-4551-abe3-5ed4b4662b5c",
+    "confirm": {
+      "type": "confirm"
+    },
+    "content": "[\"test\",\"user\"]"
+  },
+  {
+    "role": "assistant",
+    "content": "根据查询结果，当前系统中存在以下数据模型：\n\n1. **test** - 测试数据模型\n2. **user** - 用户数据模型\n\n这是当前系统中所有的数据模型信息。如果您需要查看某个特定模型的详细信息，或者需要对这些模型进行其他操作（如创建、更新或删除），请告诉我。",
+    "toolCalls": [],
+    "id": "019c4fcc-927c-7000-8000-0d4255755316",
+    "subAgents": [],
+    "agentId": "call_smpnns23k8b697ti76olulyo",
+    "workId": "3f58cc5b-d865-4551-abe3-5ed4b4662b5c",
+    "parentAgentId": "3f58cc5b-d865-4551-abe3-5ed4b4662b5c"
+  }
+]

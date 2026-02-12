@@ -3,7 +3,7 @@ import {
   NewTokenIndices,
 } from '@langchain/core/callbacks/base'
 import { LLMResult } from '@langchain/core/outputs'
-import { AIMessage, ToolMessage } from 'langchain'
+import { AIMessage } from 'langchain'
 import { randomUUID } from 'crypto'
 
 import { AgentCluster } from '../cluster'
@@ -14,8 +14,8 @@ interface Options {
   parentAgentId?: string
 }
 
-export default class MessageCollector extends BaseCallbackHandler {
-  readonly name = 'messageCollector'
+export default class LLMMessage extends BaseCallbackHandler {
+  readonly name = 'LLMMessage'
 
   constructor(readonly options: Options) {
     super()
@@ -43,55 +43,22 @@ export default class MessageCollector extends BaseCallbackHandler {
         name: call.name,
         args: call.args,
       }))
-    const subAgentIds = message.tool_calls
+    const subAgents = message.tool_calls
       ?.filter((call) => call.name === AgentCluster.CALL_SUB_AGENT_NAME)
-      ?.map((call) => call.id || randomUUID())
+      ?.map((call) => ({
+        id: call.id || randomUUID(),
+        name: call.args.subAgentName,
+      }))
 
     this.options.agentCluster.addMessage({
       role: 'assistant',
       content: message.content as string,
       toolCalls: toolCalls,
       id: runId,
-      subAgentIds,
+      subAgents,
       agentId: this.options.agentId,
       workId: this.options.agentCluster.id,
       parentAgentId: this.options.parentAgentId,
     })
-  }
-
-  handleToolEnd(_output: ToolMessage | Command) {
-    let output = _output as ToolMessage
-    if ('lg_name' in _output && _output.lg_name === 'Command') {
-      output = _output.update.messages[0]
-      if (!output) return
-    }
-
-    // 调用子代理的工具，不记录
-    if (output.name === AgentCluster.CALL_SUB_AGENT_NAME) return
-
-    const lastAiMessage = this.options.agentCluster.getLastAiMessage(
-      this.options.agentId,
-    )
-    const toolCall = lastAiMessage?.toolCalls?.find(
-      (call) => call.id === output.tool_call_id,
-    )
-
-    this.options.agentCluster.addMessage({
-      role: 'tool',
-      name: output.name || toolCall?.name || '',
-      content: output.content as string,
-      id: output.tool_call_id || randomUUID(),
-      aiMessageId: lastAiMessage && toolCall ? lastAiMessage.id : '',
-      agentId: this.options.agentId,
-      workId: this.options.agentCluster.id,
-      parentAgentId: this.options.parentAgentId,
-    })
-  }
-}
-
-interface Command {
-  lg_name: 'Command'
-  update: {
-    messages: ToolMessage[]
   }
 }

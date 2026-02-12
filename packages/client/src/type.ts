@@ -13,10 +13,11 @@ declare module '@shuttle-ai/type' {
 
     export namespace Client {
       export namespace Agent {
-        export type Status = 'idle' | 'running'
+        export type Status = 'idle' | 'running' | 'waitRevoke'
 
         export interface Options {
           id: string
+          name: string
           work: Work
           status?: Status
           history?: Message.Define[]
@@ -62,7 +63,9 @@ declare module '@shuttle-ai/type' {
           transporter: Transporter
           initAgent?:
             | Record<string, Agent.WithRunToolParams>
-            | ((agentName: string) => Agent.WithRunToolParams)
+            | ((
+                agentName: string,
+              ) => Agent.WithRunToolParams | Promise<Agent.WithRunToolParams>)
           autoRunScope?: AutoRunScope
         }
       }
@@ -78,6 +81,10 @@ declare module '@shuttle-ai/type' {
           data: StartWork,
         ) => AsyncGenerator<ShuttleAi.Ask.Define, void, unknown>
         report: (data: Report.Define) => Promise<void>
+        revokeMessage: (data: {
+          workId: string
+          agentId: string
+        }) => Promise<ShuttleAi.Message.Define[]>
       }
 
       export interface HttpTransporterOptions extends NHttpTransporter.Options {
@@ -86,6 +93,10 @@ declare module '@shuttle-ai/type' {
           'path' | 'beforeSend'
         >
         report?: NHttpTransporter.MethodConfig<Report.Define>
+        revokeMessage?: NHttpTransporter.MethodConfig<{
+          workId: string
+          agentId: string
+        }>
       }
     }
   }

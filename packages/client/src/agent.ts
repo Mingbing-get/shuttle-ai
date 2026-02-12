@@ -29,7 +29,13 @@ export default class Agent {
     const aiMessage = this.findAiMessageById(belongMessageId)
     if (!aiMessage) return
 
-    aiMessage.subAgentIds = [...(aiMessage.subAgentIds || []), agent.options.id]
+    aiMessage.subAgents = [
+      ...(aiMessage.subAgents || []),
+      {
+        id: agent.options.id,
+        name: agent.options.name,
+      },
+    ]
     this.trigger('aiMessage', aiMessage)
   }
 
@@ -64,6 +70,13 @@ export default class Agent {
   addMessage(message: ShuttleAi.Message.Define) {
     this._messages.push(message)
     this.trigger('messages', this._messages)
+  }
+
+  revokeMessages(messages: ShuttleAi.Message.Define[]) {
+    this._messages = messages
+    this._status = 'idle'
+    this.trigger('messages', this._messages)
+    this.trigger('status', this._status)
   }
 
   addToolCall(aiTool: ShuttleAi.Message.AITool) {
@@ -164,6 +177,10 @@ export default class Agent {
     }
 
     return aiMessage
+  }
+
+  revoke() {
+    return this.options.work.revokeAgent(this.options.id, this.options.name)
   }
 
   private checkAutoRun(toolName: string) {

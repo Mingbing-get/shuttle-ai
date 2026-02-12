@@ -18,9 +18,9 @@ export default function AiMessage({ messageId }: Props) {
 
   const subAgents = useMemo(() => {
     return agent.children.filter((child) =>
-      message?.subAgentIds?.includes(child.options.id),
+      message?.subAgents?.map((item) => item.id)?.includes(child.options.id),
     )
-  }, [agent, message?.subAgentIds])
+  }, [agent, message?.subAgents])
 
   if (!message) {
     return null
@@ -31,7 +31,7 @@ export default function AiMessage({ messageId }: Props) {
       <div className="ai-message-content">
         <MarkdownRender>{message.content}</MarkdownRender>
       </div>
-      {message.toolCalls?.length && (
+      {!!message.toolCalls?.length && (
         <div className="agent-work-agent-tools">
           {message.toolCalls.map((toolCall) => {
             return <ToolRender key={toolCall.id} toolCall={toolCall} />

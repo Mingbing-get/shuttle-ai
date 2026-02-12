@@ -3,7 +3,7 @@ import classNames from 'classnames'
 import { ShuttleAi } from '@shuttle-ai/type'
 import { Agent } from '@shuttle-ai/client'
 
-import { useAgentMessages } from '../../hooks'
+import { useAgentMessages, useAgentStatus } from '../../hooks'
 import { AgentProvider } from '../../context'
 import UserMessage from './userMessage'
 import AiMessage from './aiMessage'
@@ -16,6 +16,7 @@ interface Porps {
 export default function AgentWorkAgent({ agent, isRoot }: Porps) {
   const [closeMessageIds, setCloseMessageIds] = useState<string[]>([])
   const messages = useAgentMessages(agent)
+  const status = useAgentStatus(agent)
 
   const showMessages = useMemo(() => {
     const newMessage: (ShuttleAi.Message.User | ShuttleAi.Message.AI)[] = []
@@ -33,7 +34,12 @@ export default function AgentWorkAgent({ agent, isRoot }: Porps) {
     return newMessage
   }, [messages, closeMessageIds])
 
-  const handleToggleClose = useCallback((messageId: string) => {
+  const handleToggleClose = useCallback(async (messageId: string) => {
+    if (agent.status === 'waitRevoke') {
+      await agent.revoke()
+      return
+    }
+
     setCloseMessageIds((old) => {
       if (old.includes(messageId)) {
         return old.filter((id) => id !== messageId)
@@ -54,7 +60,10 @@ export default function AgentWorkAgent({ agent, isRoot }: Porps) {
               <UserMessage
                 key={message.id}
                 message={message}
-                closed={closeMessageIds.includes(message.id)}
+                closed={
+                  status === 'waitRevoke' ||
+                  closeMessageIds.includes(message.id)
+                }
                 onToggleClose={handleToggleClose}
               />
             )

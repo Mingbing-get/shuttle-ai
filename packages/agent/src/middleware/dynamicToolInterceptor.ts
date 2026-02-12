@@ -14,6 +14,17 @@ const dynamicToolInterceptorMiddleware = createMiddleware({
       _parentAgentId?: string
     }
 
+    const reportToolMessage: ShuttleAi.Message.Tool = {
+      role: 'tool',
+      name: request.toolCall.name,
+      id: request.toolCall.id || '',
+      aiMessageId: '',
+      agentId: context._agentId,
+      workId: context._agentCluster.id,
+      parentAgentId: context._parentAgentId,
+    }
+    let toolMessage: UnpackPromise<ReturnType<typeof handle>>
+
     if (
       request.tool instanceof DynamicTool ||
       request.tool instanceof DynamicStructuredTool
@@ -26,6 +37,7 @@ const dynamicToolInterceptorMiddleware = createMiddleware({
           context._agentId,
         )
 
+        reportToolMessage.aiMessageId = aiMessage?.id || ''
         const toolCall = aiMessage?.toolCalls?.find(
           (toolCall) => toolCall.id === request.toolCall.id,
         )
@@ -39,11 +51,13 @@ const dynamicToolInterceptorMiddleware = createMiddleware({
           workId: context._agentCluster.id,
           parentAgentId: context._parentAgentId,
         })
+        reportToolMessage.confirm = res
 
         if (
           res.type === 'reject' ||
           (res.type === 'confirm' && extras.remote)
         ) {
+          context._agentCluster.addMessage(reportToolMessage)
           return new ToolMessage({
             content: res.reason || 'can not run tool',
             tool_call_id: request.toolCall.id || '',
@@ -51,6 +65,7 @@ const dynamicToolInterceptorMiddleware = createMiddleware({
         }
 
         if (res.type === 'confirmWithResult') {
+          context._agentCluster.addMessage(reportToolMessage)
           return new ToolMessage({
             content:
               typeof res.result === 'object'
@@ -79,7 +94,7 @@ const dynamicToolInterceptorMiddleware = createMiddleware({
           }
         }
 
-        const toolMessage = await handle(request)
+        toolMessage = await handle(request)
         if (toolMessage instanceof ToolMessage) {
           context._agentCluster.options.hooks.onToolEnd?.(
             toolPath,
@@ -88,12 +103,23 @@ const dynamicToolInterceptorMiddleware = createMiddleware({
         } else {
           context._agentCluster.options.hooks.onToolEnd?.(toolPath, '{}')
         }
-
-        return toolMessage
       }
     }
 
-    return handle(request)
+    toolMessage = await handle(request)
+
+    if ('lg_name' in toolMessage && toolMessage.lg_name === 'Command') {
+      toolMessage = (toolMessage?.update as any)?.messages?.[0]
+    }
+    if (
+      toolMessage instanceof ToolMessage &&
+      toolMessage.name !== AgentCluster.CALL_SUB_AGENT_NAME
+    ) {
+      reportToolMessage.content = toolMessage.content as string
+      context._agentCluster.addMessage(reportToolMessage)
+    }
+
+    return toolMessage
   },
 })
 
@@ -118,3 +144,5 @@ function checkAutoRunTool(
 }
 
 export default dynamicToolInterceptorMiddleware
+
+type UnpackPromise<T> = T extends Promise<infer U> ? U : T

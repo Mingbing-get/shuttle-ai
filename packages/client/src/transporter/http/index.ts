@@ -94,4 +94,10 @@ export default class HttpTransporter
       defaultPath: '/report',
     })
   }
+
+  async revokeMessage(data: { workId: string; agentId: string }) {
+    return await this.request(this.options?.revokeMessage, data, {
+      defaultPath: '/revokeMessage',
+    })
+  }
 }

@@ -39,5 +39,19 @@ export default class FileMessageCollector
     }
   }
 
-  async getSubAgentTasks() {}
+  async getSubAgentTasks(workId: string, subAgentIds: string[]) {
+    const taskMessage: ShuttleAi.Message.Define[] = []
+
+    for (const subAgentId of subAgentIds) {
+      const messages = await this.getMessagesByAgentId(workId, subAgentId)
+      const firstUserMessage = messages.find(
+        (message) => message.role === 'user',
+      )
+      if (firstUserMessage) {
+        taskMessage.push(firstUserMessage)
+      }
+    }
+
+    return taskMessage
+  }
 }

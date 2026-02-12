@@ -7,7 +7,7 @@ import { z } from 'zod'
 import { randomUUID } from 'crypto'
 
 import { dynamicToolInterceptorMiddleware } from '../middleware'
-import { MessageCollector } from '../callback'
+import { LLMMessage } from '../callback'
 
 export default class AgentCluster extends Runnable {
   static MAIN_AGENT_NAME = 'main_agent'
@@ -62,7 +62,7 @@ export default class AgentCluster extends Runnable {
           _agentId: this.id,
         },
         callbacks: [
-          new MessageCollector({
+          new LLMMessage({
             agentCluster: this,
             agentId: this.id,
           }),
@@ -172,7 +172,7 @@ export default class AgentCluster extends Runnable {
               _parentAgentId: agentId,
             },
             callbacks: [
-              new MessageCollector({
+              new LLMMessage({
                 agentCluster: this,
                 agentId: currentAgentId,
                 parentAgentId: agentId,

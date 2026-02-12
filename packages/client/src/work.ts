@@ -4,6 +4,9 @@ import Agent from './agent'
 type ListenerType = 'autoRunScope' | 'status' | 'agent'
 
 export default class Work {
+  static MAIN_AGENT_NAME = 'main_agent'
+  static CALL_SUB_AGENT_NAME = 'call_sub_agent'
+
   private _id: string = ''
   private _status: ShuttleAi.Client.Work.Status = 'idle'
   private _autoRunScope: ShuttleAi.Client.Work.AutoRunScope = 'none'
@@ -52,7 +55,7 @@ export default class Work {
       } else if (data.type === 'endWork') {
         this.setStatus('idle')
       } else if (data.type === 'agentStart') {
-        this.initAgent(data.data)
+        await this.initAgent(data.data)
       } else if (data.type === 'agentEnd') {
         const agent = this.agentMap.get(data.data.agentId)
         agent?.end()
@@ -67,6 +70,62 @@ export default class Work {
         agent?.endTool(data.data)
       }
     }
+  }
+
+  async revoke(workId: string) {
+    this._id = workId
+    this.agentMap.clear()
+
+    await this.revokeAgent(workId, Work.MAIN_AGENT_NAME)
+  }
+
+  async revokeAgent(agentId: string, agentName: string) {
+    const messages = await this.options.transporter.revokeMessage({
+      workId: this._id,
+      agentId,
+    })
+
+    const currentAgentMessages = messages.filter(
+      (message) => message.agentId === agentId,
+    )
+
+    let currentAgent = this.agentMap.get(agentId)
+    if (!currentAgent) {
+      const currentAgentParams = await this.getAgentParams(agentName)
+      currentAgent = new Agent({
+        id: agentId,
+        name: agentName,
+        work: this,
+        history: currentAgentMessages,
+        status: 'idle',
+        tools: currentAgentParams.tools,
+      })
+      this.agentMap.set(agentId, currentAgent)
+    } else {
+      currentAgent.revokeMessages(currentAgentMessages)
+    }
+
+    for (const message of messages) {
+      if (message.role !== 'assistant' || !message.subAgents?.length) {
+        continue
+      }
+
+      for (const subAgent of message.subAgents) {
+        const subAgentParams = await this.getAgentParams(subAgent.name)
+        const subAgentInstance = new Agent({
+          id: subAgent.id,
+          name: subAgent.name,
+          work: this,
+          history: messages.filter((msg) => msg.agentId === subAgent.id),
+          status: 'waitRevoke',
+          tools: subAgentParams.tools,
+        })
+        this.agentMap.set(subAgent.id, subAgentInstance)
+        currentAgent.addChild(subAgentInstance, message.id)
+      }
+    }
+
+    this.trigger('agent')
   }
 
   on(type: ListenerType, cb: () => void) {
@@ -110,7 +169,7 @@ export default class Work {
     this.trigger('agent')
   }
 
-  private initAgent(data: ShuttleAi.Ask.AgentStart['data']) {
+  private async initAgent(data: ShuttleAi.Ask.AgentStart['data']) {
     const reportData: ShuttleAi.Report.AgentStart = {
       type: 'agentStart',
       workId: this._id,
@@ -120,12 +179,7 @@ export default class Work {
       },
     }
 
-    let params: ShuttleAi.Client.Agent.WithRunToolParams = {}
-    if (typeof this.options.initAgent === 'function') {
-      params = this.options.initAgent(data.agentName)
-    } else if (this.options.initAgent) {
-      params = this.options.initAgent[data.agentName] || {}
-    }
+    const params = await this.getAgentParams(data.agentName)
 
     reportData.data.params = {
       ...params,
@@ -150,6 +204,7 @@ export default class Work {
     if (!agent) {
       const agent = new Agent({
         id: data.agentId,
+        name: data.agentName,
         work: this,
         history: [currentUserMessage],
         status: 'running',
@@ -162,5 +217,14 @@ export default class Work {
     }
 
     return this.options.transporter.report(reportData)
+  }
+
+  private async getAgentParams(agentName: string) {
+    if (typeof this.options.initAgent === 'function') {
+      return await this.options.initAgent(agentName)
+    } else if (this.options.initAgent) {
+      return this.options.initAgent[agentName] || {}
+    }
+    return {}
   }
 }
