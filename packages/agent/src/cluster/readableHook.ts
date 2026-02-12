@@ -136,9 +136,6 @@ export default function createReadableHook(
       triggerHookLinks('onToolEnd', [toolPath, toolResult], hookLinks)
       send({ type: 'toolEnd', data: { toolPath, toolResult } })
     },
-    onMessage(message) {
-      triggerHookLinks('onMessage', [message], hookLinks)
-    },
   }
 
   return {

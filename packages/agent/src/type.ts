@@ -27,6 +27,8 @@ declare module '@shuttle-ai/type' {
          */
         hooks: Hooks
 
+        messageCollector?: MessageCollector
+
         /**
          * The messages of the agent.
          */
@@ -56,7 +58,14 @@ declare module '@shuttle-ai/type' {
           tool: ShuttleAi.Message.AITool,
         ) => Promise<ShuttleAi.Tool.ConfirmResult>
         onToolEnd?: (toolPath: ShuttleAi.Tool.Path, result: any) => void
-        onMessage?: (message: ShuttleAi.Message.Define) => void
+      }
+
+      export interface MessageCollector {
+        saveMessage: (message: ShuttleAi.Message.Define) => void
+        getMessagesByAgentId: (
+          workId: string,
+          agentId: string,
+        ) => Promise<ShuttleAi.Message.Define[]>
       }
     }
   }

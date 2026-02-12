@@ -3,7 +3,11 @@ import { CreateAgentParams } from 'langchain'
 import { ChatOpenAI } from '@langchain/openai'
 import { Middleware } from '@koa/router'
 import { ShuttleAi } from '@shuttle-ai/type'
-import { AgentCluster, readableHook } from '@shuttle-ai/agent'
+import {
+  AgentCluster,
+  readableHook,
+  FileMessageCollector,
+} from '@shuttle-ai/agent'
 import { resolve } from 'path'
 
 import resolverManager from './resolverManager'
@@ -59,6 +63,9 @@ const invoke: Middleware = async (ctx) => {
     id: workId,
     hooks: hooks,
     autoRunScope,
+    messageCollector: new FileMessageCollector(
+      resolve(process.cwd(), './agent/messages'),
+    ),
   })
 
   resolverManager.addAgentResolver(agentCluster.id, {

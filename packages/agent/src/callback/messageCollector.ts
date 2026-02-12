@@ -59,7 +59,13 @@ export default class MessageCollector extends BaseCallbackHandler {
     })
   }
 
-  handleToolEnd(output: ToolMessage) {
+  handleToolEnd(_output: ToolMessage | Command) {
+    let output = _output as ToolMessage
+    if ('lg_name' in _output && _output.lg_name === 'Command') {
+      output = _output.update.messages[0]
+      if (!output) return
+    }
+
     // 调用子代理的工具，不记录
     if (output.name === AgentCluster.CALL_SUB_AGENT_NAME) return
 
@@ -72,7 +78,7 @@ export default class MessageCollector extends BaseCallbackHandler {
 
     this.options.agentCluster.addMessage({
       role: 'tool',
-      name: output.name || '',
+      name: output.name || toolCall?.name || '',
       content: output.content as string,
       id: output.tool_call_id || randomUUID(),
       aiMessageId: lastAiMessage && toolCall ? lastAiMessage.id : '',
@@ -80,5 +86,12 @@ export default class MessageCollector extends BaseCallbackHandler {
       workId: this.options.agentCluster.id,
       parentAgentId: this.options.parentAgentId,
     })
+  }
+}
+
+interface Command {
+  lg_name: 'Command'
+  update: {
+    messages: ToolMessage[]
   }
 }

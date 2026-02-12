@@ -1,0 +1,54 @@
+.shuttle-ai-tool-todo {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+
+  .shuttle-ai-tool-todo-header {
+    font-size: 14px;
+    font-weight: 500;
+    color: #333;
+  }
+
+  .shuttle-ai-tool-todo-item {
+    display: inline-block;
+    width: fit-content;
+    font-size: 14px;
+
+    &.status-in_progress {
+      color: transparent;
+      background-clip: text;
+      background-image: linear-gradient(
+        90deg,
+        #000 0%,
+        #000 45%,
+        #f5222d 45%,
+        #52c41a 50%,
+        #1677ff 55%,
+        #000 55%,
+        #000 100%
+      );
+      background-size: 200% auto;
+      animation: bg-scan 1s linear infinite;
+    }
+
+    // &.status-pending {
+    // }
+
+    &.status-completed {
+      text-decoration: line-through;
+      color: #888;
+    }
+  }
+}
+
+@keyframes bg-scan {
+  0% {
+    background-position: 100% center;
+  }
+  100% {
+    background-position: 0% center;
+  }
+}

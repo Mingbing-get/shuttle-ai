@@ -42,6 +42,7 @@ export default class Work {
     const generator = this.options.transporter.invoke({
       prompt,
       autoRunScope: this._autoRunScope,
+      workId: this._id,
     })
 
     for await (const data of generator) {
@@ -137,24 +138,28 @@ export default class Work {
         }),
     }
 
-    const agent = new Agent({
-      id: data.agentId,
-      work: this,
-      history: [
-        {
-          role: 'user',
-          content: data.content,
-          id: '',
-          agentId: data.agentId,
-          workId: this._id,
-          parentAgentId: data.parentAgentId,
-        },
-      ],
-      status: 'running',
-      parentId: data.parentAgentId,
-      tools: params.tools,
-    })
-    this.addAgent(agent, data.beloneMessageId)
+    const currentUserMessage: ShuttleAi.Message.User = {
+      role: 'user',
+      content: data.content,
+      id: new Date().toISOString(),
+      agentId: data.agentId,
+      workId: this._id,
+      parentAgentId: data.parentAgentId,
+    }
+    const agent = this.agentMap.get(data.agentId)
+    if (!agent) {
+      const agent = new Agent({
+        id: data.agentId,
+        work: this,
+        history: [currentUserMessage],
+        status: 'running',
+        parentId: data.parentAgentId,
+        tools: params.tools,
+      })
+      this.addAgent(agent, data.beloneMessageId)
+    } else {
+      agent.addMessage(currentUserMessage)
+    }
 
     return this.options.transporter.report(reportData)
   }

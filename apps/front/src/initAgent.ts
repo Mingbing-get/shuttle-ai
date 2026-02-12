@@ -1,4 +1,5 @@
 import { ShuttleAi } from '@shuttle-ai/type'
+import { writeTodosTool } from '@shuttle-ai/render-react'
 import '@shuttle-ai/client'
 import '@shuttle-ai/render-react'
 import CreateModel from './createModel'
@@ -51,4 +52,19 @@ const initAgent: Record<string, ShuttleAi.Client.Agent.WithRunToolParams> = {
   },
 }
 
-export default initAgent
+const getAgentParams = (
+  agentName: string,
+): ShuttleAi.Client.Agent.WithRunToolParams => {
+  const info = initAgent[agentName]
+  if (!info) {
+    return {
+      tools: [writeTodosTool],
+    }
+  }
+
+  return {
+    ...info,
+    tools: [...(info.tools || []), writeTodosTool],
+  }
+}
+export default getAgentParams

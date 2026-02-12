@@ -61,6 +61,11 @@ export default class Agent {
     }
   }
 
+  addMessage(message: ShuttleAi.Message.Define) {
+    this._messages.push(message)
+    this.trigger('messages', this._messages)
+  }
+
   addToolCall(aiTool: ShuttleAi.Message.AITool) {
     const aiMessage = this.findAiMessageById(aiTool.id)
     if (!aiMessage) return

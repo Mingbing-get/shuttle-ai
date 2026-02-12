@@ -1,5 +1,6 @@
 import { Runnable } from '@langchain/core/runnables'
-import { createAgent, CreateAgentParams } from 'langchain'
+import { createAgent, CreateAgentParams, todoListMiddleware } from 'langchain'
+import { HumanMessage, AIMessage, ToolMessage } from '@langchain/core/messages'
 import { ClientTool, tool } from '@langchain/core/tools'
 import { ShuttleAi } from '@shuttle-ai/type'
 import { z } from 'zod'
@@ -16,7 +17,7 @@ export default class AgentCluster extends Runnable {
   readonly id: string
 
   private messages: ShuttleAi.Message.Define[] = []
-  private abortController = new AbortController()
+  readonly abortController = new AbortController()
 
   constructor(readonly options: ShuttleAi.Cluster.Options) {
     super()
@@ -30,7 +31,7 @@ export default class AgentCluster extends Runnable {
 
   addMessage(message: ShuttleAi.Message.Define) {
     this.messages.push(message)
-    this.options.hooks.onMessage?.(message)
+    this.options.messageCollector?.saveMessage(message)
   }
 
   async invoke(input: string, options?: any): Promise<string> {
@@ -48,12 +49,10 @@ export default class AgentCluster extends Runnable {
       role: 'user',
       content: input,
     })
+    const oldMessages = await this.revokeMessages(this.id)
     const result = agent.streamEvents(
       {
-        messages: [
-          ...(options?.messages || []),
-          { role: 'user', content: input },
-        ],
+        messages: [...oldMessages, { role: 'user', content: input }],
       },
       {
         signal: this.abortController.signal,
@@ -104,6 +103,7 @@ export default class AgentCluster extends Runnable {
       middleware: [
         ...(middleware || []),
         dynamicToolInterceptorMiddleware,
+        todoListMiddleware(),
       ] as any,
       tools: normalizedTools,
     })
@@ -218,5 +218,34 @@ export default class AgentCluster extends Runnable {
 
   getMessages() {
     return this.messages
+  }
+
+  private async revokeMessages(
+    agentId: string,
+  ): Promise<(HumanMessage | AIMessage | ToolMessage)[]> {
+    if (!this.options.messageCollector) return []
+
+    const messages = await this.options.messageCollector.getMessagesByAgentId(
+      this.id,
+      agentId,
+    )
+
+    return messages.map((message) => {
+      if (message.role === 'user') {
+        return new HumanMessage(message.content)
+      }
+
+      if (message.role === 'assistant') {
+        return new AIMessage({
+          content: message.content,
+          tool_calls: message.toolCalls,
+        })
+      }
+
+      return new ToolMessage({
+        content: message.content || message.confirm?.result,
+        tool_call_id: message.id,
+      })
+    })
   }
 }
