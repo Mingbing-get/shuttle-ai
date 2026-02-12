@@ -18,7 +18,11 @@ const transporter = new HttpTransporter({
 
 export default function Main() {
   return (
-    <AgentWorkProvider transporter={transporter} initAgent={initAgent}>
+    <AgentWorkProvider
+      transporter={transporter}
+      initAgent={initAgent}
+      context={{}}
+    >
       <AgentWorkRender
         style={{
           boxSizing: 'border-box',

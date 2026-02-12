@@ -34,7 +34,13 @@ export default class AgentCluster extends Runnable {
     this.options.messageCollector?.saveMessage(message)
   }
 
-  async invoke(input: string, options?: any): Promise<string> {
+  async invoke(
+    input: string,
+    options?: Omit<
+      ShuttleAi.Cluster.InvokeOptions,
+      keyof ShuttleAi.Cluster.SystemContext
+    >,
+  ): Promise<string> {
     const params = await this.options.hooks.onAgentStart({
       agentId: this.id,
       agentName: AgentCluster.MAIN_AGENT_NAME,
@@ -166,6 +172,7 @@ export default class AgentCluster extends Runnable {
           {
             signal: this.abortController.signal,
             context: {
+              ...(request.context || {}),
               _agentCluster: this,
               _agentId: currentAgentId,
               _parentAgentId: agentId,

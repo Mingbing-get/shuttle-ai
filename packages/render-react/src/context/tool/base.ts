@@ -5,6 +5,7 @@ export interface ToolContext<
   T extends Record<string, any> = Record<string, any>,
 > {
   args: T
+  content?: string
   confirmResult?: ShuttleAi.Tool.ConfirmResult
   confirm?: (result: ShuttleAi.Tool.ConfirmResult) => Promise<void>
 }

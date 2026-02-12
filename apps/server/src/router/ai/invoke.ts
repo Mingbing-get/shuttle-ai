@@ -27,7 +27,7 @@ async function loadAgent(
   })
 
   try {
-    const configName = name.split('_')[0]
+    const configName = name.split('_').slice(0, -1).join('_')
     const config = await import(
       resolve(process.cwd(), `./src/agent/${configName}`)
     )

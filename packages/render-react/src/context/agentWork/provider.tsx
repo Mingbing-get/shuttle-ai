@@ -6,6 +6,7 @@ import { agentWorkContext } from './base'
 
 interface BaseProps {
   children?: React.ReactNode
+  context: ShuttleAi.Client.ReactRender.Context
 }
 
 interface WithAgentProps extends BaseProps {
@@ -16,10 +17,17 @@ interface WorkOptionProps extends BaseProps, ShuttleAi.Client.Work.Options {}
 
 type Props = WithAgentProps | WorkOptionProps
 
-export default function AgentWorkProvider({ children, ...rest }: Props) {
+export default function AgentWorkProvider({
+  children,
+  context,
+  ...rest
+}: Props) {
   const work = useRef(createWork(rest))
 
-  const providerValue = useMemo(() => ({ work: work.current }), [])
+  const providerValue = useMemo(
+    () => ({ work: work.current, context }),
+    [context],
+  )
 
   return (
     <agentWorkContext.Provider value={providerValue}>
@@ -28,7 +36,11 @@ export default function AgentWorkProvider({ children, ...rest }: Props) {
   )
 }
 
-function createWork(props: Props) {
+function createWork(
+  props:
+    | Omit<WithAgentProps, keyof BaseProps>
+    | Omit<WorkOptionProps, keyof BaseProps>,
+) {
   if ('work' in props) {
     return props.work
   }

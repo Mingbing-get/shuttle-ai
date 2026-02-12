@@ -8,6 +8,10 @@ declare module '@shuttle-ai/type' {
           Render: React.FC<any>
         }
       }
+
+      export namespace ReactRender {
+        export interface Context {}
+      }
     }
   }
 }

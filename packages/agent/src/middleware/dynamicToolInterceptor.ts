@@ -8,11 +8,7 @@ import AgentCluster from '../cluster/instance'
 const dynamicToolInterceptorMiddleware = createMiddleware({
   name: 'dynamicToolInterceptorMiddleware',
   wrapToolCall: async (request, handle) => {
-    const context = request.runtime.context as {
-      _agentCluster: AgentCluster
-      _agentId: string
-      _parentAgentId?: string
-    }
+    const context = request.runtime.context as ShuttleAi.Cluster.Context
 
     const reportToolMessage: ShuttleAi.Message.Tool = {
       role: 'tool',
@@ -22,11 +18,12 @@ const dynamicToolInterceptorMiddleware = createMiddleware({
       agentId: context._agentId,
       workId: context._agentCluster.id,
     }
-    let toolMessage: UnpackPromise<ReturnType<typeof handle>>
+    let toolMessage: UnpackPromise<ReturnType<typeof handle>> | undefined
 
     if (
       request.tool instanceof DynamicTool ||
-      request.tool instanceof DynamicStructuredTool
+      request.tool instanceof DynamicStructuredTool ||
+      (request.tool && 'extras' in request.tool)
     ) {
       const extras = (request.tool.extras as ShuttleAi.Tool.Extras) || {}
       if (!extras.skipReport) {
@@ -92,19 +89,35 @@ const dynamicToolInterceptorMiddleware = createMiddleware({
           }
         }
 
-        toolMessage = await handle(request)
-        if (toolMessage instanceof ToolMessage) {
-          context._agentCluster.options.hooks.onToolEnd?.(
-            toolPath,
-            toolMessage.content,
-          )
-        } else {
-          context._agentCluster.options.hooks.onToolEnd?.(toolPath, '{}')
+        try {
+          toolMessage = await handle(request)
+          if (toolMessage instanceof ToolMessage || 'content' in toolMessage) {
+            context._agentCluster.options.hooks.onToolEnd?.(
+              toolPath,
+              toolMessage.content,
+            )
+          } else {
+            context._agentCluster.options.hooks.onToolEnd?.(toolPath, '{}')
+          }
+        } catch (error) {
+          toolMessage = new ToolMessage({
+            content: (error as Error).message || 'can not run tool',
+            tool_call_id: request.toolCall.id || '',
+          })
         }
       }
     }
 
-    toolMessage = await handle(request)
+    if (!toolMessage) {
+      try {
+        toolMessage = await handle(request)
+      } catch (error) {
+        toolMessage = new ToolMessage({
+          content: (error as Error).message || 'can not run tool',
+          tool_call_id: request.toolCall.id || '',
+        })
+      }
+    }
 
     if ('lg_name' in toolMessage && toolMessage.lg_name === 'Command') {
       toolMessage = (toolMessage?.update as any)?.messages?.[0]
@@ -117,7 +130,7 @@ const dynamicToolInterceptorMiddleware = createMiddleware({
       context._agentCluster.addMessage(reportToolMessage)
     }
 
-    return toolMessage
+    return toolMessage!
   },
 })
 

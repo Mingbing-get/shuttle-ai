@@ -7,6 +7,7 @@ import { toolContext } from './base'
 interface Props {
   children?: React.ReactNode
   args: Record<string, any>
+  content?: string
   toolId: string
   confirmResult?: ShuttleAi.Tool.ConfirmResult
   agent: Agent
@@ -15,6 +16,7 @@ interface Props {
 export default function ToolProvider({
   children,
   args,
+  content,
   toolId,
   confirmResult,
   agent,
@@ -25,8 +27,8 @@ export default function ToolProvider({
   )
 
   const providerValue = useMemo(
-    () => ({ args, confirmResult, confirm: handleConfirm }),
-    [args, confirmResult, handleConfirm],
+    () => ({ args, content, confirmResult, confirm: handleConfirm }),
+    [args, content, confirmResult, handleConfirm],
   )
 
   return (

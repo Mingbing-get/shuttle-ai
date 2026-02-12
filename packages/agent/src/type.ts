@@ -1,6 +1,7 @@
 import '@shuttle-ai/type'
 import { ClientTool } from '@langchain/core/tools'
 import { CreateAgentParams } from 'langchain'
+import AgentCluster from './cluster/instance'
 
 declare module '@shuttle-ai/type' {
   export namespace ShuttleAi {
@@ -66,6 +67,19 @@ declare module '@shuttle-ai/type' {
           workId: string,
           agentId: string,
         ) => Promise<ShuttleAi.Message.Define[]>
+      }
+
+      export interface SystemContext {
+        _agentCluster: AgentCluster
+        _agentId: string
+        _parentAgentId?: string
+      }
+
+      export interface Context extends SystemContext {}
+
+      export interface InvokeOptions {
+        context?: Context
+        [x: string]: any
       }
     }
   }

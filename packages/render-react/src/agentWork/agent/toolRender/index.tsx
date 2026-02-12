@@ -43,6 +43,7 @@ export default function ToolRender({ toolCall }: Props) {
           toolId={toolCall.id}
           agent={agent}
           args={toolCall.args}
+          content={message.content}
           confirmResult={message.confirm}
         >
           <toolDefine.run.Render />
