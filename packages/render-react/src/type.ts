@@ -6,6 +6,12 @@ declare module '@shuttle-ai/type' {
       export namespace Agent {
         export interface RenderTool {
           Render: React.FC<any>
+          defaultProps?:
+            | Record<string, any>
+            | ((params: {
+                args: Record<string, any>
+                content?: string
+              }) => Record<string, any>)
         }
       }
 

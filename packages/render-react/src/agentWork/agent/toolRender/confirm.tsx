@@ -8,9 +8,17 @@ interface Props {
   toolId: string
   result?: ShuttleAi.Tool.ConfirmResult
   agent: Agent
+  getConfirmResult?: () =>
+    | Promise<Pick<ShuttleAi.Tool.ConfirmResult, 'result' | 'newArgs'>>
+    | Pick<ShuttleAi.Tool.ConfirmResult, 'result' | 'newArgs'>
 }
 
-export default function ConfirmRender({ toolId, result, agent }: Props) {
+export default function ConfirmRender({
+  toolId,
+  result,
+  agent,
+  getConfirmResult,
+}: Props) {
   const [type, setType] = useState(
     result?.type === 'reject' ? 'reject' : 'accept',
   )
@@ -48,13 +56,22 @@ export default function ConfirmRender({ toolId, result, agent }: Props) {
               reason,
             }
 
+      if (result.type === 'confirm' && getConfirmResult) {
+        const confirmResult = await getConfirmResult()
+        if (confirmResult) {
+          result.result = confirmResult.result
+          result.newArgs = confirmResult.newArgs
+          result.type = 'confirmWithResult'
+        }
+      }
+
       await agent.confirmTool(toolId, result)
     } catch (error) {
       throw error
     } finally {
       setLoading(false)
     }
-  }, [type, reason, toolId, agent])
+  }, [type, reason, toolId, agent, getConfirmResult])
 
   const handlePressEnter = useCallback(
     (e: React.KeyboardEvent<HTMLTextAreaElement>) => {

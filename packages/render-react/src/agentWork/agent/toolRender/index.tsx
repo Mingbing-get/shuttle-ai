@@ -45,9 +45,8 @@ export default function ToolRender({ toolCall }: Props) {
           args={toolCall.args}
           content={message.content}
           confirmResult={message.confirm}
-        >
-          <toolDefine.run.Render />
-        </ToolProvider>
+          run={toolDefine.run}
+        />
       )}
     </div>
   )
