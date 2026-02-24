@@ -29,7 +29,11 @@ export default function AgentWorkRender({ className, style, empty }: Props) {
       wrapper.current.scrollTo({ top: wrapper.current.scrollHeight })
     })
 
-    observer.observe(wrapper.current, { childList: true, subtree: true })
+    observer.observe(wrapper.current, {
+      childList: true,
+      subtree: true,
+      characterData: true,
+    })
 
     return () => observer.disconnect()
   }, [])
@@ -42,7 +46,7 @@ export default function AgentWorkRender({ className, style, empty }: Props) {
         wrapper.current.scrollHeight -
           wrapper.current.scrollTop -
           wrapper.current.clientHeight,
-      ) < 1
+      ) < 8
   }, [])
 
   return (

@@ -4,13 +4,16 @@ import { SendOutlined } from '@ant-design/icons'
 import { ShuttleAi } from '@shuttle-ai/type'
 import { Agent } from '@shuttle-ai/client'
 
+type WithPromise<T> = T | Promise<T>
+
 interface Props {
   toolId: string
   result?: ShuttleAi.Tool.ConfirmResult
   agent: Agent
-  getConfirmResult?: () =>
-    | Promise<Pick<ShuttleAi.Tool.ConfirmResult, 'result' | 'newArgs'>>
-    | Pick<ShuttleAi.Tool.ConfirmResult, 'result' | 'newArgs'>
+  getConfirmResult?: () => WithPromise<
+    Pick<ShuttleAi.Tool.ConfirmResult, 'result' | 'newArgs'>
+  >
+  getNewArgs?: () => WithPromise<ShuttleAi.Tool.ConfirmResult['newArgs']>
 }
 
 export default function ConfirmRender({
@@ -18,6 +21,7 @@ export default function ConfirmRender({
   result,
   agent,
   getConfirmResult,
+  getNewArgs,
 }: Props) {
   const [type, setType] = useState(
     result?.type === 'reject' ? 'reject' : 'accept',
@@ -50,6 +54,7 @@ export default function ConfirmRender({
         type === 'accept'
           ? {
               type: 'confirm',
+              newArgs: await getNewArgs?.(),
             }
           : {
               type: 'reject',
