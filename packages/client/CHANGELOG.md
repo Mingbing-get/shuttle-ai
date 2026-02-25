@@ -1,5 +1,13 @@
 # @shuttle-ai/client
 
+## 0.0.3
+
+### Patch Changes
+
+- 修复发布问题
+- Updated dependencies
+  - @shuttle-ai/type@0.0.3
+
 ## 0.0.2
 
 ### Patch Changes
