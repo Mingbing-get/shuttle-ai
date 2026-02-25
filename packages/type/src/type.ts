@@ -32,6 +32,7 @@ export namespace ShuttleAi {
 
     export interface Define {
       name: string
+      label?: string
       description: string
       schema?: ZodAny | JSONSchema
       extras?: Extras

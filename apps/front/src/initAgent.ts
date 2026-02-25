@@ -39,6 +39,7 @@ const initAgent: Record<string, ShuttleAi.Client.Agent.WithRunToolParams> = {
     tools: [
       {
         name: 'create_model',
+        label: '创建数据模型',
         description: 'create a model',
         run: {
           type: 'render',

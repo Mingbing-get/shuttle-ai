@@ -31,6 +31,17 @@
     }
   }
 
+  .agent-work-agent-render-tool {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+
+    .render-tool-name {
+      margin: 0;
+      font-weight: bold;
+    }
+  }
+
   .fn-tool-confirm {
     display: flex;
     flex-direction: column;

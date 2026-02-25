@@ -27,7 +27,7 @@ export default function ToolRender({ toolCall }: Props) {
     <div className="agent-work-agent-tool">
       {toolDefine?.run.type !== 'render' ? (
         <div className="agent-work-agent-fn-tool">
-          <p className="fn-tool-name">{toolCall.name}</p>
+          <p className="fn-tool-name">{toolDefine?.label || toolCall.name}</p>
           <pre className="fn-tool-args">{formatJson(toolCall.args)}</pre>
           <pre className="fn-tool-result">
             {formatJson(message.content || message.confirm?.result)}
@@ -39,14 +39,19 @@ export default function ToolRender({ toolCall }: Props) {
           />
         </div>
       ) : (
-        <ToolProvider
-          toolId={toolCall.id}
-          agent={agent}
-          args={toolCall.args}
-          content={message.content}
-          confirmResult={message.confirm}
-          run={toolDefine.run}
-        />
+        <div className="agent-work-agent-render-tool">
+          <p className="render-tool-name">
+            {toolDefine?.label || toolCall.name}
+          </p>
+          <ToolProvider
+            toolId={toolCall.id}
+            agent={agent}
+            args={toolCall.args}
+            content={message.content}
+            confirmResult={message.confirm}
+            run={toolDefine.run}
+          />
+        </div>
       )}
     </div>
   )
