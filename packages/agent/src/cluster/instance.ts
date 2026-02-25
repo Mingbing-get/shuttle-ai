@@ -1,5 +1,5 @@
 import { Runnable } from '@langchain/core/runnables'
-import { createAgent, CreateAgentParams, todoListMiddleware } from 'langchain'
+import { createAgent, CreateAgentParams } from 'langchain'
 import { HumanMessage, AIMessage, ToolMessage } from '@langchain/core/messages'
 import { ClientTool, tool } from '@langchain/core/tools'
 import { ShuttleAi } from '@shuttle-ai/type'
@@ -109,7 +109,6 @@ export default class AgentCluster extends Runnable {
       middleware: [
         ...(middleware || []),
         dynamicToolInterceptorMiddleware,
-        todoListMiddleware(),
       ] as any,
       tools: normalizedTools,
     })
