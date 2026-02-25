@@ -1,5 +1,11 @@
 # @shuttle-ai/type
 
+## 0.0.5
+
+### Patch Changes
+
+- 移出计划tool
+
 ## 0.0.4
 
 ### Patch Changes

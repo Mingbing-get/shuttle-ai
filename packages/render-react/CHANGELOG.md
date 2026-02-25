@@ -1,5 +1,14 @@
 # @shuttle-ai/render-react
 
+## 0.0.5
+
+### Patch Changes
+
+- 移出计划tool
+- Updated dependencies
+  - @shuttle-ai/client@0.0.5
+  - @shuttle-ai/type@0.0.5
+
 ## 0.0.4
 
 ### Patch Changes
