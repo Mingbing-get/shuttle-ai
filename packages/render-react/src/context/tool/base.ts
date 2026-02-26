@@ -9,8 +9,8 @@ export interface ToolContext<
   agent: Agent
   toolId: string
   content?: string
-  confirmResult?: ShuttleAi.Tool.ConfirmResult
-  confirm?: (result: ShuttleAi.Tool.ConfirmResult) => Promise<void>
+  confirmResult?: ShuttleAi.Tool.ConfirmResult<T>
+  confirm?: (result: ShuttleAi.Tool.ConfirmResult<T>) => Promise<void>
 }
 
 export const toolContext = createContext<ToolContext>({
