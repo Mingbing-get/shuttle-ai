@@ -79,7 +79,15 @@ export default function ConfirmRender({
     } finally {
       setLoading(false)
     }
-  }, [type, reason, toolId, agent, getConfirmResult, onAfterConfirm])
+  }, [
+    type,
+    reason,
+    toolId,
+    agent,
+    getConfirmResult,
+    getNewArgs,
+    onAfterConfirm,
+  ])
 
   const handlePressEnter = useCallback(
     (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
