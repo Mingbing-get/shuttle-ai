@@ -1,4 +1,4 @@
-import '@shuttle-ai/type'
+export * from '@shuttle-ai/type'
 
 declare module '@shuttle-ai/type' {
   export namespace ShuttleAi {

@@ -1,4 +1,4 @@
-import './type'
+export * from './type'
 
 export * from './agentWork'
 export * from './context'

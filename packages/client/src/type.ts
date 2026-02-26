@@ -1,4 +1,4 @@
-import '@shuttle-ai/type'
+export * from '@shuttle-ai/type'
 import { NHttpTransporter } from './transporter/http/type'
 import Work from './work'
 

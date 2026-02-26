@@ -1,4 +1,4 @@
-import '@shuttle-ai/type'
+export * from '@shuttle-ai/type'
 import { ClientTool } from '@langchain/core/tools'
 import { CreateAgentParams } from 'langchain'
 import AgentCluster from './cluster/instance'
