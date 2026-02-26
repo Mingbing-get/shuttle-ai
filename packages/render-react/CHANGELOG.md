@@ -1,5 +1,14 @@
 # @shuttle-ai/render-react
 
+## 0.0.6
+
+### Patch Changes
+
+- 自定义渲染tool默认显示工具名称
+- Updated dependencies
+  - @shuttle-ai/client@0.0.6
+  - @shuttle-ai/type@0.0.6
+
 ## 0.0.5
 
 ### Patch Changes

@@ -1,5 +1,11 @@
 # @shuttle-ai/type
 
+## 0.0.6
+
+### Patch Changes
+
+- 自定义渲染tool默认显示工具名称
+
 ## 0.0.5
 
 ### Patch Changes
