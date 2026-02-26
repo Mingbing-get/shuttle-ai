@@ -14,14 +14,17 @@ export namespace ShuttleAi {
       remote?: boolean
     }
 
-    export interface ConfirmResult {
+    export interface ConfirmResult<
+      A extends Record<string, any> = Record<string, any>,
+      R = any,
+    > {
       type: 'confirm' | 'reject' | 'confirmWithResult'
       reason?: string
-      result?: any
+      result?: R
       /**
        * 仅confirm时生效，可修改调用参数
        */
-      newArgs?: Record<string, any>
+      newArgs?: A
     }
 
     export interface Call {
