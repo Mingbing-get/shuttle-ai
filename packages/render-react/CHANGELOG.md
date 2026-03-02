@@ -1,5 +1,14 @@
 # @shuttle-ai/render-react
 
+## 0.0.7
+
+### Patch Changes
+
+- 优化tool的传递
+- Updated dependencies
+  - @shuttle-ai/client@0.0.7
+  - @shuttle-ai/type@0.0.7
+
 ## 0.0.6
 
 ### Patch Changes

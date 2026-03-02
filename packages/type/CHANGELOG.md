@@ -1,5 +1,11 @@
 # @shuttle-ai/type
 
+## 0.0.7
+
+### Patch Changes
+
+- 优化tool的传递
+
 ## 0.0.6
 
 ### Patch Changes
