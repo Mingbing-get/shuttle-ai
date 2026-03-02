@@ -58,7 +58,7 @@ declare module '@shuttle-ai/type' {
         onToolStart: (
           tool: ShuttleAi.Message.AITool,
         ) => Promise<ShuttleAi.Tool.ConfirmResult>
-        onToolEnd?: (toolPath: ShuttleAi.Tool.Path, result: any) => void
+        onToolEnd?: (toolPath: ShuttleAi.Tool.Path, result: Tool.Result) => void
       }
 
       export interface MessageCollector {

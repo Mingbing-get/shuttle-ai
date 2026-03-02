@@ -1,12 +1,12 @@
-import { useCallback, useMemo } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Agent } from '@shuttle-ai/client'
 import { ShuttleAi } from '@shuttle-ai/type'
 
-import { toolContext } from './base'
+import { toolContext, ToolContext } from './base'
 
 interface Props {
   args: Record<string, any>
-  content?: string
+  result?: ShuttleAi.Tool.Result
   toolId: string
   confirmResult?: ShuttleAi.Tool.ConfirmResult
   agent: Agent
@@ -15,7 +15,7 @@ interface Props {
 
 export default function ToolProvider({
   args,
-  content,
+  result,
   toolId,
   confirmResult,
   agent,
@@ -25,17 +25,40 @@ export default function ToolProvider({
     (result: ShuttleAi.Tool.ConfirmResult) => agent.confirmTool(toolId, result),
     [agent, toolId],
   )
+  const [effectArgs, setEffectArgs] = useState(confirmResult?.newArgs || args)
 
-  const providerValue = useMemo(
+  useEffect(() => {
+    setEffectArgs(confirmResult?.newArgs || args)
+  }, [confirmResult?.newArgs, args])
+
+  const updateArg = useCallback((paths: string[], v: any) => {
+    setEffectArgs((old) => {
+      const newEffectArgs = { ...old }
+      let current = newEffectArgs
+      for (let i = 0; i < paths.length; i++) {
+        const path = paths[i]
+        if (i === paths.length - 1) {
+          current[path] = v
+        } else {
+          current = { ...current[path] }
+        }
+      }
+      return newEffectArgs
+    })
+  }, [])
+
+  const providerValue: ToolContext = useMemo(
     () => ({
       args,
+      effectArgs,
       agent,
       toolId,
-      content,
+      result,
       confirmResult,
       confirm: handleConfirm,
+      updateArg,
     }),
-    [args, agent, toolId, content, confirmResult, handleConfirm],
+    [args, agent, toolId, result, confirmResult, effectArgs, handleConfirm],
   )
 
   const defaultProps = useMemo(() => {
@@ -44,12 +67,12 @@ export default function ToolProvider({
     if (typeof run.defaultProps === 'function') {
       return run.defaultProps({
         args,
-        content,
+        result,
       })
     }
 
     return run.defaultProps
-  }, [run.defaultProps, args, content])
+  }, [run.defaultProps, args, result])
 
   return (
     <toolContext.Provider value={providerValue}>

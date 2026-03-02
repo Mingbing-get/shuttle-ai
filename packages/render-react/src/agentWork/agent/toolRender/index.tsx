@@ -30,7 +30,7 @@ export default function ToolRender({ toolCall }: Props) {
           <p className="fn-tool-name">{toolDefine?.label || toolCall.name}</p>
           <pre className="fn-tool-args">{formatJson(toolCall.args)}</pre>
           <pre className="fn-tool-result">
-            {formatJson(message.content || message.confirm?.result)}
+            {formatJson(message.result || message.confirm?.result)}
           </pre>
           <ConfirmRender
             result={message.confirm}
@@ -47,7 +47,7 @@ export default function ToolRender({ toolCall }: Props) {
             toolId={toolCall.id}
             agent={agent}
             args={toolCall.args}
-            content={message.content}
+            result={message.result}
             confirmResult={message.confirm}
             run={toolDefine.run}
           />

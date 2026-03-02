@@ -14,13 +14,19 @@ export namespace ShuttleAi {
       remote?: boolean
     }
 
+    export interface Result<R = any> {
+      type: 'success' | 'fail'
+      content?: R
+      reason?: string
+    }
+
     export interface ConfirmResult<
       A extends Record<string, any> = Record<string, any>,
       R = any,
     > {
       type: 'confirm' | 'reject' | 'confirmWithResult'
       reason?: string
-      result?: R
+      result?: Result<R>
       /**
        * 仅confirm时生效，可修改调用参数
        */
@@ -92,7 +98,7 @@ export namespace ShuttleAi {
     export interface Tool extends Base<'tool'> {
       aiMessageId: string
       name: string
-      content?: string
+      result?: Tool.Result
       confirm?: Tool.ConfirmResult
     }
 
@@ -129,7 +135,7 @@ export namespace ShuttleAi {
 
     export interface ToolEnd extends Base<
       'toolEnd',
-      { toolPath: Tool.Path; toolResult: any }
+      { toolPath: Tool.Path; toolResult: Tool.Result }
     > {}
 
     export interface StartWork extends Base<'startWork', { workId: string }> {}

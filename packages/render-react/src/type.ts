@@ -10,7 +10,7 @@ declare module '@shuttle-ai/type' {
             | Record<string, any>
             | ((params: {
                 args: Record<string, any>
-                content?: string
+                result?: Tool.Result
               }) => Record<string, any>)
         }
       }

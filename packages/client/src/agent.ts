@@ -110,7 +110,7 @@ export default class Agent {
     const toolMessage = this.findToolMessageById(info.toolPath.toolId)
     if (!toolMessage) return
 
-    toolMessage.content = info.toolResult
+    toolMessage.result = info.toolResult
     this.trigger('toolMessage', toolMessage)
   }
 

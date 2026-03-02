@@ -19,6 +19,7 @@ const dynamicToolInterceptorMiddleware = createMiddleware({
       workId: context._agentCluster.id,
     }
     let toolMessage: UnpackPromise<ReturnType<typeof handle>> | undefined
+    let isError = false
 
     if (
       request.tool instanceof DynamicTool ||
@@ -92,17 +93,25 @@ const dynamicToolInterceptorMiddleware = createMiddleware({
         try {
           toolMessage = await handle(request)
           if (toolMessage instanceof ToolMessage || 'content' in toolMessage) {
-            context._agentCluster.options.hooks.onToolEnd?.(
-              toolPath,
-              toolMessage.content,
-            )
+            context._agentCluster.options.hooks.onToolEnd?.(toolPath, {
+              type: 'success',
+              content: toolMessage.content as string,
+            })
           } else {
-            context._agentCluster.options.hooks.onToolEnd?.(toolPath, '{}')
+            context._agentCluster.options.hooks.onToolEnd?.(toolPath, {
+              type: 'success',
+              content: '{}',
+            })
           }
         } catch (error) {
           toolMessage = new ToolMessage({
             content: (error as Error).message || 'can not run tool',
             tool_call_id: request.toolCall.id || '',
+          })
+          isError = true
+          context._agentCluster.options.hooks.onToolEnd?.(toolPath, {
+            type: 'fail',
+            reason: toolMessage.content as string,
           })
         }
       }
@@ -112,6 +121,7 @@ const dynamicToolInterceptorMiddleware = createMiddleware({
       try {
         toolMessage = await handle(request)
       } catch (error) {
+        isError = true
         toolMessage = new ToolMessage({
           content: (error as Error).message || 'can not run tool',
           tool_call_id: request.toolCall.id || '',
@@ -126,7 +136,15 @@ const dynamicToolInterceptorMiddleware = createMiddleware({
       toolMessage instanceof ToolMessage &&
       toolMessage.name !== AgentCluster.CALL_SUB_AGENT_NAME
     ) {
-      reportToolMessage.content = toolMessage.content as string
+      reportToolMessage.result = isError
+        ? {
+            type: 'fail',
+            reason: toolMessage.content as string,
+          }
+        : {
+            type: 'success',
+            content: toolMessage.content as string,
+          }
       context._agentCluster.addMessage(reportToolMessage)
     }
 

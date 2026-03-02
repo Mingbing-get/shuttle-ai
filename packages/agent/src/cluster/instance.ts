@@ -246,10 +246,20 @@ export default class AgentCluster extends Runnable {
         })
       }
 
+      const result = message.result || message.confirm?.result
+
       return new ToolMessage({
-        content: message.content || message.confirm?.result,
+        content:
+          (result?.type === 'success'
+            ? this.anyToString(result.content)
+            : result?.reason) || '',
         tool_call_id: message.id,
       })
     })
+  }
+
+  private anyToString(v: any) {
+    if (typeof v === 'object') return JSON.stringify(v)
+    return v
   }
 }
