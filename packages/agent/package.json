@@ -1,6 +1,6 @@
 {
   "name": "@shuttle-ai/agent",
-  "version": "0.0.7",
+  "version": "0.0.8",
   "author": "Mingbing-get <1508850533@qq.com>",
   "license": "MIT",
   "description": "Shuttle AI 智能体操作库",

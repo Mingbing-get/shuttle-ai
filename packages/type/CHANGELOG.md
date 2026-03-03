@@ -1,5 +1,11 @@
 # @shuttle-ai/type
 
+## 0.0.8
+
+### Patch Changes
+
+- 添加工具结果渲染组件
+
 ## 0.0.7
 
 ### Patch Changes

@@ -1,5 +1,13 @@
 # @shuttle-ai/client
 
+## 0.0.8
+
+### Patch Changes
+
+- 添加工具结果渲染组件
+- Updated dependencies
+  - @shuttle-ai/type@0.0.8
+
 ## 0.0.7
 
 ### Patch Changes
