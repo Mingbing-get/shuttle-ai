@@ -1,4 +1,5 @@
 import { ShuttleAi } from '@shuttle-ai/type'
+import classNames from 'classnames'
 
 interface Props<T> {
   title?: string
@@ -16,7 +17,12 @@ export default function CatchResultError<T>({
   return (
     <div className="shuttle-ai-tool-result">
       <p className="shuttle-ai-tool-result-title">{title}:</p>
-      <div className="shuttle-ai-tool-result-content">
+      <div
+        className={classNames(
+          'shuttle-ai-tool-result-content',
+          `type-${result.type}`,
+        )}
+      >
         {result.type === 'fail' ? (
           <span>{result.reason}</span>
         ) : (

@@ -65,5 +65,10 @@
     .shuttle-ai-tool-result-title {
       font-weight: bold;
     }
+    .shuttle-ai-tool-result-content {
+      &.type-fail {
+        color: var(--ant-color-error);
+      }
+    }
   }
 }
