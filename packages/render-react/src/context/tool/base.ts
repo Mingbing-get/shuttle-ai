@@ -4,12 +4,13 @@ import { Agent } from '@shuttle-ai/client'
 
 export interface ToolContext<
   T extends Record<string, any> = Record<string, any>,
+  R = any,
 > {
   args: T
   effectArgs: T
   agent: Agent
   toolId: string
-  result?: ShuttleAi.Tool.Result
+  result?: ShuttleAi.Tool.Result<R>
   confirmResult?: ShuttleAi.Tool.ConfirmResult<T>
   confirm?: (result: ShuttleAi.Tool.ConfirmResult<T>) => Promise<void>
   updateArg: <P extends ObjectArrayPaths<T>>(

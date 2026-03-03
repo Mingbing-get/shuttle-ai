@@ -47,18 +47,44 @@ export default function ToolProvider({
     })
   }, [])
 
+  const parseResult = useMemo(() => {
+    if (result?.type !== 'success') return result
+
+    let parseContent = result.content
+    if (typeof parseContent === 'string') {
+      try {
+        parseContent = JSON.parse(parseContent)
+      } catch (error) {
+        // 解析失败，保持原始内容
+      }
+    }
+
+    return {
+      ...result,
+      content: parseContent,
+    }
+  }, [result])
+
   const providerValue: ToolContext = useMemo(
     () => ({
       args,
       effectArgs,
       agent,
       toolId,
-      result,
+      result: parseResult,
       confirmResult,
       confirm: handleConfirm,
       updateArg,
     }),
-    [args, agent, toolId, result, confirmResult, effectArgs, handleConfirm],
+    [
+      args,
+      agent,
+      toolId,
+      parseResult,
+      confirmResult,
+      effectArgs,
+      handleConfirm,
+    ],
   )
 
   const defaultProps = useMemo(() => {
@@ -67,12 +93,12 @@ export default function ToolProvider({
     if (typeof run.defaultProps === 'function') {
       return run.defaultProps({
         args,
-        result,
+        result: parseResult,
       })
     }
 
     return run.defaultProps
-  }, [run.defaultProps, args, result])
+  }, [run.defaultProps, args, parseResult])
 
   return (
     <toolContext.Provider value={providerValue}>
