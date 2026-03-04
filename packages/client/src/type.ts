@@ -79,6 +79,7 @@ declare module '@shuttle-ai/type' {
       export interface Transporter {
         invoke: (
           data: StartWork,
+          signal?: AbortSignal,
         ) => AsyncGenerator<ShuttleAi.Ask.Define, void, unknown>
         report: (data: Report.Define) => Promise<void>
         revokeMessage: (data: {

@@ -10,6 +10,7 @@ export default class Work {
   private _id: string = ''
   private _status: ShuttleAi.Client.Work.Status = 'idle'
   private _autoRunScope: ShuttleAi.Client.Work.AutoRunScope = 'none'
+  private _controller: AbortController | null = null
 
   private agentMap: Map<string, Agent> = new Map()
   private listenerMap: Record<ListenerType, (() => void)[]> = {
@@ -39,14 +40,26 @@ export default class Work {
     this.trigger('autoRunScope')
   }
 
+  stop() {
+    this._controller?.abort()
+    this._controller = null
+
+    this.agentMap.forEach((agent) => agent.end())
+    this.setStatus('idle')
+  }
+
   async invoke(prompt: string) {
     this.setStatus('pending')
 
-    const generator = this.options.transporter.invoke({
-      prompt,
-      autoRunScope: this._autoRunScope,
-      workId: this._id,
-    })
+    this._controller = new AbortController()
+    const generator = this.options.transporter.invoke(
+      {
+        prompt,
+        autoRunScope: this._autoRunScope,
+        workId: this._id,
+      },
+      this._controller.signal,
+    )
 
     for await (const data of generator) {
       if (data.type === 'startWork') {
@@ -70,6 +83,8 @@ export default class Work {
         agent?.endTool(data.data)
       }
     }
+
+    this._controller = null
   }
 
   async revoke(workId: string) {

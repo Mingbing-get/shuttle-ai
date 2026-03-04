@@ -9,7 +9,7 @@ export default class HttpTransporter
     super(options)
   }
 
-  async *invoke(data: ShuttleAi.Client.StartWork) {
+  async *invoke(data: ShuttleAi.Client.StartWork, signal?: AbortSignal) {
     let path = this.options?.invoke?.path || '/invoke'
     if (!path.startsWith('/')) {
       path = `/${path}`
@@ -21,6 +21,7 @@ export default class HttpTransporter
       method,
       headers: this.options?.requestHeaders as Record<string, string>,
       body: JSON.stringify(body),
+      signal,
     })
 
     if (!response.ok) {

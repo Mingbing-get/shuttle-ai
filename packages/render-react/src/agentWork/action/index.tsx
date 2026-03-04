@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { Button, Input, Select } from 'antd'
-import { SendOutlined } from '@ant-design/icons'
+import { SendOutlined, PauseOutlined } from '@ant-design/icons'
 
 import { useWork } from '../../context'
 import { useWorkStatus, useWorkAutoRunScope } from '../../hooks'
@@ -53,6 +53,10 @@ export default function AgentWorkAction() {
     [],
   )
 
+  const handleStop = useCallback(() => {
+    work.stop()
+  }, [])
+
   return (
     <div className="agent-work-action">
       <Input.TextArea
@@ -71,13 +75,21 @@ export default function AgentWorkAction() {
           options={autoRunOptions}
           onChange={(value) => work.setAutoRunScope(value)}
         />
-        <Button
-          disabled={status !== 'idle' || !inputValue}
-          loading={status === 'pending' || status === 'running'}
-          onClick={handleSend}
-          type="primary"
-          icon={<SendOutlined />}
-        />
+        {status === 'running' ? (
+          <Button
+            onClick={handleStop}
+            type="primary"
+            icon={<PauseOutlined />}
+          />
+        ) : (
+          <Button
+            disabled={status !== 'idle' || !inputValue}
+            loading={status === 'pending'}
+            onClick={handleSend}
+            type="primary"
+            icon={<SendOutlined />}
+          />
+        )}
       </div>
     </div>
   )
