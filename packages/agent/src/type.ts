@@ -1,5 +1,6 @@
 export * from '@shuttle-ai/type'
 import { ClientTool } from '@langchain/core/tools'
+import { RunnableConfig } from '@langchain/core/runnables'
 import { CreateAgentParams } from 'langchain'
 import AgentCluster from './cluster/instance'
 
@@ -36,6 +37,11 @@ declare module '@shuttle-ai/type' {
         messages?: ShuttleAi.Message.Define[]
 
         single?: AbortSignal
+
+        runnableOptions?: Pick<
+          RunnableConfig,
+          'configurable' | 'maxConcurrency' | 'recursionLimit' | 'timeout'
+        >
       }
 
       export interface ToolsWithSubAgents {
@@ -81,6 +87,7 @@ declare module '@shuttle-ai/type' {
       export interface SystemContext {
         _agentCluster: AgentCluster
         _agentId: string
+        _agentName: string
         _parentAgentId?: string
       }
 

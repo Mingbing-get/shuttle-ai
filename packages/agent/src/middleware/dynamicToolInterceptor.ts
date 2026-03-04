@@ -6,19 +6,22 @@ import {
   ToolMessage,
 } from '@langchain/core/messages'
 import { ShuttleAi } from '@shuttle-ai/type'
+import { z } from 'zod'
 
 import AgentCluster from '../cluster/instance'
+
+const CHECK_LAZY_TOOL_PARAMS_ERROR_TYPE = 'check_lazy_tool_params_error'
 
 const dynamicToolInterceptorMiddleware = createMiddleware({
   name: 'dynamicToolInterceptorMiddleware',
 
   beforeModel(state, runtime) {
-    // 将获取这个工具参数的定义和调用获取工具的AI消息从历史消息中移除
     const lastMessage = state.messages[state.messages.length - 1]
     if (!lastMessage || !(lastMessage instanceof ToolMessage)) {
       return
     }
 
+    // 将获取这个工具参数的定义和调用获取工具的AI消息从历史消息中移除
     for (let i = state.messages.length - 2; i >= 1; i--) {
       const message = state.messages[i]
       if (!(message instanceof ToolMessage)) continue
@@ -44,10 +47,72 @@ const dynamicToolInterceptorMiddleware = createMiddleware({
       state.messages.splice(i - 1, 2)
       return
     }
+
+    // 检查前一轮对话是否是检查参数失败的情况，若是则移除前一轮消息
+    const beforeMessage = state.messages[state.messages.length - 3]
+    if (!beforeMessage || !(beforeMessage instanceof ToolMessage)) {
+      return
+    }
+
+    try {
+      const beforeMessageContent = JSON.parse(beforeMessage.content as string)
+      if (
+        beforeMessageContent.type !== CHECK_LAZY_TOOL_PARAMS_ERROR_TYPE ||
+        beforeMessage.name !== lastMessage.name
+      ) {
+        return
+      }
+
+      state.messages.splice(state.messages.length - 4, 2)
+    } catch (error) {}
   },
 
   wrapToolCall: async (request, handle) => {
     const context = request.runtime.context as ShuttleAi.Cluster.Context
+
+    // 处理大模型错误直接调用懒加载工具的问题
+    if (!request.tool) {
+      const lazyTool = context._agentCluster.getLazyToolByToolName(
+        request.toolCall.name,
+      )
+      if (lazyTool) {
+        if (
+          lazyTool instanceof DynamicTool ||
+          lazyTool instanceof DynamicStructuredTool
+        ) {
+          request.tool = lazyTool
+        } else {
+          request.tool = tool(() => '', {
+            schema: lazyTool.schema as any,
+            name: request.toolCall.name,
+            extras: (lazyTool as any)?.extras,
+          })
+        }
+
+        try {
+          const argSchema =
+            request.tool.schema instanceof z.ZodType
+              ? request.tool.schema
+              : z.fromJSONSchema(request.tool.schema as any)
+
+          const res = argSchema.safeParse(request.toolCall.args)
+          if (!res.success) {
+            return new ToolMessage({
+              content: JSON.stringify({
+                type: CHECK_LAZY_TOOL_PARAMS_ERROR_TYPE,
+                message: `参数校验失败：${res.error.message}\n参数定义如下\n${JSON.stringify(argSchema.toJSONSchema())}`,
+              }),
+              tool_call_id: request.toolCall.id || '',
+            })
+          }
+        } catch (error) {
+          return new ToolMessage({
+            content: `${request.toolCall.name}是懒加载工具，请严格按照懒加载工具的方式来调用`,
+            tool_call_id: request.toolCall.id || '',
+          })
+        }
+      }
+    }
 
     if (request.toolCall.name === AgentCluster.CALL_LAZY_TOOL_NAME) {
       const lazyTool = context._agentCluster.getLazyTool(

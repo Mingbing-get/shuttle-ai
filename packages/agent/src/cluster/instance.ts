@@ -69,11 +69,13 @@ export default class AgentCluster extends Runnable {
         messages: [...oldMessages, { role: 'user', content: input }],
       },
       {
+        ...this.options.runnableOptions,
         signal: this.abortController.signal,
         context: {
           ...(options?.context || {}),
           _agentCluster: this,
           _agentId: this.id,
+          _agentName: AgentCluster.MAIN_AGENT_NAME,
         },
         callbacks: [
           new LLMMessage({
@@ -156,7 +158,7 @@ export default class AgentCluster extends Runnable {
       .map((tool) => `${tool.name}: ${tool.description}`)
       .join('\n')
 
-    return `你拥有调用懒加载工具的能力, 可以按以下步骤来调用懒加载工具:
+    return `你拥有调用懒加载工具的能力, **注意**: 你**必须**按以下步骤来调用懒加载工具:
 1. 先调用${AgentCluster.GET_TOOL_PARAMS_NAME}工具来获取懒加载工具的参数定义
 2. 调用${AgentCluster.CALL_LAZY_TOOL_NAME}工具来调用懒加载的工具。
 以下懒加载工具的agentName: ${agentName}
@@ -229,11 +231,13 @@ export default class AgentCluster extends Runnable {
             messages: [{ role: 'user', content: params.request }],
           },
           {
+            ...this.options.runnableOptions,
             signal: this.abortController.signal,
             context: {
               ...(request.context || {}),
               _agentCluster: this,
               _agentId: currentAgentId,
+              _agentName: params.subAgentName,
               _parentAgentId: agentId,
             },
             callbacks: [
@@ -399,6 +403,17 @@ export default class AgentCluster extends Runnable {
     }
 
     return tool
+  }
+
+  getLazyToolByToolName(toolName: string) {
+    for (const key in this.lazyTools) {
+      const tools = this.lazyTools[key]
+      for (const tool of tools) {
+        if (tool.name === toolName) {
+          return tool
+        }
+      }
+    }
   }
 
   private async revokeMessages(
