@@ -1,5 +1,13 @@
 # @shuttle-ai/agent
 
+## 0.0.9
+
+### Patch Changes
+
+- 支持动态扩展agent能力
+- Updated dependencies
+  - @shuttle-ai/type@0.0.9
+
 ## 0.0.8
 
 ### Patch Changes
