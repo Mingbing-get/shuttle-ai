@@ -1,5 +1,13 @@
 # @shuttle-ai/agent
 
+## 0.0.10
+
+### Patch Changes
+
+- 拦截大模型直接调用懒加载工具的情况
+- Updated dependencies
+  - @shuttle-ai/type@0.0.10
+
 ## 0.0.9
 
 ### Patch Changes
