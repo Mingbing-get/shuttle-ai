@@ -36,7 +36,7 @@ const initAgent: Record<string, ShuttleAi.Client.Agent.WithRunToolParams> = {
     ],
   },
   model_agent: {
-    tools: [
+    lazyTools: [
       {
         name: 'create_model',
         label: '创建数据模型',

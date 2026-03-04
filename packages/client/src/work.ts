@@ -205,6 +205,13 @@ export default class Work {
 
           return rest
         }),
+      lazyTools: params.lazyTools
+        ?.filter((tool) => !tool.extras?.disableExport)
+        ?.map((tool) => {
+          const { run, ...rest } = tool
+
+          return rest
+        }),
     }
 
     if (!data.isLazy) {
@@ -224,11 +231,17 @@ export default class Work {
           history: [currentUserMessage],
           status: 'running',
           parentId: data.parentAgentId,
-          tools: params.tools,
+          tools: [...(params.tools || []), ...(params.lazyTools || [])],
         })
         this.addAgent(agent, data.beloneMessageId)
       } else {
         agent.addMessage(currentUserMessage)
+      }
+    } else if (data.parentAgentId) {
+      const parentAgent = this.agentMap.get(data.parentAgentId)
+      if (parentAgent) {
+        // parentAgent.addTools(params.tools)
+        parentAgent.addTools(params.lazyTools)
       }
     }
 

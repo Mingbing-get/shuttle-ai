@@ -48,9 +48,10 @@ declare module '@shuttle-ai/type' {
 
         export interface WithRunToolParams extends Omit<
           Report.AgentStart['data']['params'],
-          'tools'
+          'tools' | 'lazyTools'
         > {
           tools?: WithRunTool[]
+          lazyTools?: WithRunTool[]
         }
       }
 

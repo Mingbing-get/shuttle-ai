@@ -22,6 +22,12 @@ export default class Agent {
     this._status = options.status || 'idle'
   }
 
+  addTools(tools?: ShuttleAi.Client.Agent.WithRunTool[]) {
+    if (!tools?.length) return
+
+    this.options.tools = [...(this.options.tools || []), ...tools]
+  }
+
   addChild(agent: Agent, belongMessageId: string) {
     this._children.push(agent)
     this.trigger('subAgents', undefined)

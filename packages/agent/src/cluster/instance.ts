@@ -158,7 +158,7 @@ export default class AgentCluster extends Runnable {
 
     return `你拥有调用懒加载工具的能力, 可以按以下步骤来调用懒加载工具:
 1. 先调用${AgentCluster.GET_TOOL_PARAMS_NAME}工具来获取懒加载工具的参数定义
-2. 调用${AgentCluster.CALL_LAZY_AGENT_NAME}工具来调用懒加载的工具。
+2. 调用${AgentCluster.CALL_LAZY_TOOL_NAME}工具来调用懒加载的工具。
 以下懒加载工具的agentName: ${agentName}
 可用的懒加载工具: \n${toolsTip}`
   }
