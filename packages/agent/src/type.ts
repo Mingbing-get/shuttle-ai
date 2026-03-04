@@ -47,6 +47,15 @@ declare module '@shuttle-ai/type' {
          * The sub-agents of the agent.
          */
         subAgents?: ShuttleAi.SubAgent.Define[]
+
+        /**
+         * The lazy tools of the agent.
+         */
+        lazyTools?: (ShuttleAi.Tool.Define | ClientTool)[]
+        /**
+         * The lazy sub-agents of the agent.
+         */
+        lazyAgents?: Omit<ShuttleAi.SubAgent.Define, 'tools' | 'subAgents'>[]
       }
 
       export interface Hooks {

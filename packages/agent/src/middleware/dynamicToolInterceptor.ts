@@ -1,14 +1,87 @@
 import { createMiddleware } from 'langchain'
-import { DynamicTool, DynamicStructuredTool } from '@langchain/core/tools'
-import { AIMessageChunk, ToolMessage } from '@langchain/core/messages'
+import { DynamicTool, DynamicStructuredTool, tool } from '@langchain/core/tools'
+import {
+  AIMessageChunk,
+  AIMessage,
+  ToolMessage,
+} from '@langchain/core/messages'
 import { ShuttleAi } from '@shuttle-ai/type'
 
 import AgentCluster from '../cluster/instance'
 
 const dynamicToolInterceptorMiddleware = createMiddleware({
   name: 'dynamicToolInterceptorMiddleware',
+
+  beforeModel(state, runtime) {
+    // 将获取这个工具参数的定义和调用获取工具的AI消息从历史消息中移除
+    const lastMessage = state.messages[state.messages.length - 1]
+    if (!lastMessage || !(lastMessage instanceof ToolMessage)) {
+      return
+    }
+
+    for (let i = state.messages.length - 2; i >= 1; i--) {
+      const message = state.messages[i]
+      if (!(message instanceof ToolMessage)) continue
+
+      const beforeMessage = state.messages[i - 1]
+      if (
+        !(beforeMessage instanceof AIMessage) &&
+        !(beforeMessage instanceof AIMessageChunk)
+      ) {
+        continue
+      }
+
+      const beforeMessageTool = beforeMessage.tool_calls?.[0]
+      if (
+        !beforeMessageTool ||
+        beforeMessageTool.name !== AgentCluster.GET_TOOL_PARAMS_NAME
+      ) {
+        continue
+      }
+
+      if (beforeMessageTool.args?.toolName !== lastMessage.name) continue
+
+      state.messages.splice(i - 1, 2)
+      return
+    }
+  },
+
   wrapToolCall: async (request, handle) => {
     const context = request.runtime.context as ShuttleAi.Cluster.Context
+
+    if (request.toolCall.name === AgentCluster.CALL_LAZY_TOOL_NAME) {
+      const lazyTool = context._agentCluster.getLazyTool(
+        request.toolCall.args.agentName,
+        request.toolCall.args.toolName,
+      )
+      request.toolCall = {
+        ...request.toolCall,
+        name: request.toolCall.args.toolName,
+        args: request.toolCall.args.args,
+      }
+      if (
+        lazyTool instanceof DynamicTool ||
+        lazyTool instanceof DynamicStructuredTool
+      ) {
+        request.tool = lazyTool
+      } else {
+        request.tool = tool(() => '', {
+          name: request.toolCall.name,
+          extras: (lazyTool as any)?.extras,
+        })
+      }
+
+      const lastMessage = request.state.messages[
+        request.state.messages.length - 1
+      ] as AIMessageChunk
+      const stateTool = lastMessage.tool_calls?.find(
+        (tool) => tool.id === request.toolCall.id,
+      )
+      if (stateTool) {
+        stateTool.args = request.toolCall.args
+        stateTool.name = request.toolCall.name
+      }
+    }
 
     const reportToolMessage: ShuttleAi.Message.Tool = {
       role: 'tool',
@@ -134,7 +207,10 @@ const dynamicToolInterceptorMiddleware = createMiddleware({
     }
     if (
       toolMessage instanceof ToolMessage &&
-      toolMessage.name !== AgentCluster.CALL_SUB_AGENT_NAME
+      ![
+        AgentCluster.CALL_SUB_AGENT_NAME,
+        AgentCluster.GET_TOOL_PARAMS_NAME,
+      ].includes(toolMessage.name || '')
     ) {
       reportToolMessage.result = isError
         ? {
@@ -152,7 +228,7 @@ const dynamicToolInterceptorMiddleware = createMiddleware({
   },
 })
 
-function checkAutoRunTool(
+export function checkAutoRunTool(
   extras: ShuttleAi.Tool.Extras,
   agentCluster: AgentCluster,
 ) {

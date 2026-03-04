@@ -101,6 +101,14 @@ export default function createReadableHook(
         },
       }))
 
+      const lazyTools = (remoteParams.lazyTools || []).map((tool) => ({
+        ...tool,
+        extras: {
+          ...tool.extras,
+          remote: true,
+        },
+      }))
+
       return {
         ...serverParams,
         systemPrompt:
@@ -110,6 +118,11 @@ export default function createReadableHook(
           ...(serverParams?.subAgents || []),
           ...(remoteParams.subAgents || []),
         ],
+        lazyAgents: [
+          ...(serverParams?.lazyAgents || []),
+          ...(remoteParams.lazyAgents || []),
+        ],
+        lazyTools: [...(serverParams?.lazyTools || []), ...lazyTools],
       }
     },
     onAgentEnd(agentId) {

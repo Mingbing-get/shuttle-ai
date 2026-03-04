@@ -62,6 +62,9 @@ export namespace ShuttleAi {
 
       tools?: Tool.Define[]
       subAgents?: Define[]
+
+      lazyTools?: Tool.Define[]
+      lazyAgents?: Omit<Define, 'tools' | 'subAgents'>[]
     }
   }
 
@@ -123,6 +126,7 @@ export namespace ShuttleAi {
         beloneMessageId?: string
         parentAgentId?: string
         content: string
+        isLazy?: boolean
       }
     > {}
 
@@ -173,6 +177,8 @@ export namespace ShuttleAi {
           systemPrompt?: string
           tools?: Tool.Define[]
           subAgents?: SubAgent.Define[]
+          lazyTools?: Tool.Define[]
+          lazyAgents?: Omit<SubAgent.Define, 'tools' | 'subAgents'>[]
         }
       }
     > {}

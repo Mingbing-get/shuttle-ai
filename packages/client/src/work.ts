@@ -192,27 +192,29 @@ export default class Work {
         }),
     }
 
-    const currentUserMessage: ShuttleAi.Message.User = {
-      role: 'user',
-      content: data.content,
-      id: new Date().toISOString(),
-      agentId: data.agentId,
-      workId: this._id,
-    }
-    const agent = this.agentMap.get(data.agentId)
-    if (!agent) {
-      const agent = new Agent({
-        id: data.agentId,
-        name: data.agentName,
-        work: this,
-        history: [currentUserMessage],
-        status: 'running',
-        parentId: data.parentAgentId,
-        tools: params.tools,
-      })
-      this.addAgent(agent, data.beloneMessageId)
-    } else {
-      agent.addMessage(currentUserMessage)
+    if (!data.isLazy) {
+      const currentUserMessage: ShuttleAi.Message.User = {
+        role: 'user',
+        content: data.content,
+        id: new Date().toISOString(),
+        agentId: data.agentId,
+        workId: this._id,
+      }
+      const agent = this.agentMap.get(data.agentId)
+      if (!agent) {
+        const agent = new Agent({
+          id: data.agentId,
+          name: data.agentName,
+          work: this,
+          history: [currentUserMessage],
+          status: 'running',
+          parentId: data.parentAgentId,
+          tools: params.tools,
+        })
+        this.addAgent(agent, data.beloneMessageId)
+      } else {
+        agent.addMessage(currentUserMessage)
+      }
     }
 
     return this.options.transporter.report(reportData)

@@ -34,13 +34,32 @@ export default class LLMMessage extends BaseCallbackHandler {
 
   handleLLMEnd(output: LLMResult, runId: string) {
     const message: AIMessage = (output.generations[0][0] as any).message
+
+    // 不保存获取工具参数定义
+    if (
+      message.tool_calls?.length === 1 &&
+      message.tool_calls[0].name === AgentCluster.GET_TOOL_PARAMS_NAME
+    ) {
+      return
+    }
+
     const toolCalls = message.tool_calls
       ?.filter((call) => call.name !== AgentCluster.CALL_SUB_AGENT_NAME)
-      ?.map((call) => ({
-        id: call.id || randomUUID(),
-        name: call.name,
-        args: call.args,
-      }))
+      ?.map((call) => {
+        if (call.name === AgentCluster.CALL_LAZY_TOOL_NAME) {
+          return {
+            id: call.id || randomUUID(),
+            name: call.args.toolName,
+            args: call.args.args,
+          }
+        }
+
+        return {
+          id: call.id || randomUUID(),
+          name: call.name,
+          args: call.args,
+        }
+      })
     const subAgents = message.tool_calls
       ?.filter((call) => call.name === AgentCluster.CALL_SUB_AGENT_NAME)
       ?.map((call) => ({

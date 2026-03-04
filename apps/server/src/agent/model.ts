@@ -7,7 +7,7 @@ const modelAgent: ShuttleAi.Cluster.ToolsWithSubAgents &
   Pick<CreateAgentParams, 'systemPrompt'> = {
   systemPrompt:
     '你是一个数据模型的智能体，你可以查询、创建、更新、删除数据模型。',
-  tools: [
+  lazyTools: [
     tool(
       () => {
         return ['test', 'user']

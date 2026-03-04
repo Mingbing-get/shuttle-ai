@@ -10,7 +10,7 @@ const mainAgent: ShuttleAi.Cluster.ToolsWithSubAgents &
       description: '获取我的名字',
     },
   ],
-  subAgents: [
+  lazyAgents: [
     {
       name: 'model_agent',
       description: '一个管理数据模型的智能体',
