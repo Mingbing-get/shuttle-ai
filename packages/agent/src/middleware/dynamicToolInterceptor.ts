@@ -54,12 +54,22 @@ const dynamicToolInterceptorMiddleware = createMiddleware({
       return
     }
 
+    const beforeAiMessage = state.messages[state.messages.length - 4]
+    if (
+      !(beforeAiMessage instanceof AIMessage) &&
+      !(beforeAiMessage instanceof AIMessageChunk)
+    ) {
+      return
+    }
+
+    const beforeAiMessageCall = beforeAiMessage.tool_calls?.[0]
+    if (beforeAiMessageCall?.name !== lastMessage.name) {
+      return
+    }
+
     try {
       const beforeMessageContent = JSON.parse(beforeMessage.content as string)
-      if (
-        beforeMessageContent.type !== CHECK_LAZY_TOOL_PARAMS_ERROR_TYPE ||
-        beforeMessage.name !== lastMessage.name
-      ) {
+      if (beforeMessageContent.type !== CHECK_LAZY_TOOL_PARAMS_ERROR_TYPE) {
         return
       }
 
@@ -98,6 +108,7 @@ const dynamicToolInterceptorMiddleware = createMiddleware({
           const res = argSchema.safeParse(request.toolCall.args)
           if (!res.success) {
             return new ToolMessage({
+              name: request.toolCall.name,
               content: JSON.stringify({
                 type: CHECK_LAZY_TOOL_PARAMS_ERROR_TYPE,
                 message: `参数校验失败：${res.error.message}\n参数定义如下\n${JSON.stringify(argSchema.toJSONSchema())}`,
@@ -107,6 +118,7 @@ const dynamicToolInterceptorMiddleware = createMiddleware({
           }
         } catch (error) {
           return new ToolMessage({
+            name: request.toolCall.name,
             content: `${request.toolCall.name}是懒加载工具，请严格按照懒加载工具的方式来调用`,
             tool_call_id: request.toolCall.id || '',
           })
@@ -193,6 +205,7 @@ const dynamicToolInterceptorMiddleware = createMiddleware({
         ) {
           context._agentCluster.addMessage(reportToolMessage)
           return new ToolMessage({
+            name: request.toolCall.name,
             content: res.reason || 'can not run tool',
             tool_call_id: request.toolCall.id || '',
           })
@@ -201,6 +214,7 @@ const dynamicToolInterceptorMiddleware = createMiddleware({
         if (res.type === 'confirmWithResult') {
           context._agentCluster.addMessage(reportToolMessage)
           return new ToolMessage({
+            name: request.toolCall.name,
             content:
               typeof res.result === 'object'
                 ? JSON.stringify(res.result)
@@ -243,6 +257,7 @@ const dynamicToolInterceptorMiddleware = createMiddleware({
           }
         } catch (error) {
           toolMessage = new ToolMessage({
+            name: request.toolCall.name,
             content: (error as Error).message || 'can not run tool',
             tool_call_id: request.toolCall.id || '',
           })
@@ -261,6 +276,7 @@ const dynamicToolInterceptorMiddleware = createMiddleware({
       } catch (error) {
         isError = true
         toolMessage = new ToolMessage({
+          name: request.toolCall.name,
           content: (error as Error).message || 'can not run tool',
           tool_call_id: request.toolCall.id || '',
         })
