@@ -1,5 +1,11 @@
 # @shuttle-ai/type
 
+## 0.0.11
+
+### Patch Changes
+
+- 添加开发文档
+
 ## 0.0.10
 
 ### Patch Changes
