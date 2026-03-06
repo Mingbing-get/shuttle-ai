@@ -1,4 +1,5 @@
 export * from '@shuttle-ai/type'
+import { SkillLoader } from '@shuttle-ai/skill'
 import { ClientTool } from '@langchain/core/tools'
 import { RunnableConfig } from '@langchain/core/runnables'
 import { CreateAgentParams } from 'langchain'
@@ -42,6 +43,8 @@ declare module '@shuttle-ai/type' {
           RunnableConfig,
           'configurable' | 'maxConcurrency' | 'recursionLimit' | 'timeout'
         >
+
+        skillLoader?: SkillLoader
       }
 
       export interface ToolsWithSubAgents {

@@ -2,6 +2,9 @@
 node_modules/
 .pnpm-store/
 
+apps/server/agent
+apps/server/skills
+
 # Build outputs
 dist/
 build/

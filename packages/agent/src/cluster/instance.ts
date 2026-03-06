@@ -16,6 +16,10 @@ export default class AgentCluster extends Runnable {
   static CALL_LAZY_TOOL_NAME = 'call_lazy_tool'
   static GET_TOOL_PARAMS_NAME = 'get_tool_params'
 
+  static READ_SKILL_INSTRUCTION_NAME = 'read_skill_instruction'
+  static READ_SKILL_REFERENCE_NAME = 'read_skill_reference'
+  static EXECUTE_SKILL_SCRIPT_NAME = 'execute_skill_script'
+
   readonly lc_namespace = ['shuttle-ai', 'agent', 'cluster']
   readonly id: string
 
@@ -50,7 +54,7 @@ export default class AgentCluster extends Runnable {
       agentName: AgentCluster.MAIN_AGENT_NAME,
       content: input,
     })
-    const agent = this.createAgent(
+    const agent = await this.createAgent(
       params,
       this.id,
       AgentCluster.MAIN_AGENT_NAME,
@@ -97,7 +101,7 @@ export default class AgentCluster extends Runnable {
     this.abortController.abort(resign)
   }
 
-  createAgent(
+  async createAgent(
     {
       tools,
       subAgents,
@@ -110,11 +114,7 @@ export default class AgentCluster extends Runnable {
     agentId: string,
     agentName: string,
   ) {
-    const normalizedTools: ClientTool[] = [
-      this.getLazyToolParamsTool(),
-      this.callLazyToolTool(),
-      this.callLazyAgentTool(agentId),
-    ]
+    const normalizedTools: ClientTool[] = []
     if (tools?.length) {
       normalizedTools.push(...this.normalizationTools(tools))
     }
@@ -122,24 +122,42 @@ export default class AgentCluster extends Runnable {
       normalizedTools.push(this.subAgentToDynamicTool(subAgents, agentId))
     }
 
+    const systemPrompts: string[] = []
+    if (systemPrompt) {
+      systemPrompts.push(
+        typeof systemPrompt === 'string'
+          ? systemPrompt
+          : (systemPrompt.content as string),
+      )
+    }
     if (lazyTools?.length) {
       this.lazyTools[agentName] = lazyTools
-      systemPrompt = [
-        systemPrompt || '',
-        this.lazyToolsToSystemPrompt(lazyTools, agentName),
-      ].join('\n')
+      systemPrompts.push(this.lazyToolsToSystemPrompt(lazyTools, agentName))
     }
 
     if (lazyAgents?.length) {
-      systemPrompt = [
-        systemPrompt || '',
-        this.lazyAgentToSystemPrompt(lazyAgents),
-      ].join('\n')
+      systemPrompts.push(this.lazyAgentToSystemPrompt(lazyAgents))
+      normalizedTools.push(this.callLazyAgentTool(agentId))
+    }
+
+    if (lazyTools?.length || lazyAgents?.length) {
+      normalizedTools.push(
+        this.getLazyToolParamsTool(),
+        this.callLazyToolTool(),
+      )
+    }
+
+    const skillInfo = await this.getSkillPromptAndTools()
+    if (skillInfo.prompt) {
+      systemPrompts.push(skillInfo.prompt)
+    }
+    if (skillInfo.tools.length > 0) {
+      normalizedTools.push(...skillInfo.tools)
     }
 
     const agent = createAgent({
       ...extra,
-      systemPrompt,
+      systemPrompt: systemPrompts.join('\n'),
       middleware: [
         ...(middleware || []),
         dynamicToolInterceptorMiddleware,
@@ -212,7 +230,7 @@ export default class AgentCluster extends Runnable {
           parentAgentId: agentId,
           content: params.request,
         })
-        const agent = this.createAgent(
+        const agent = await this.createAgent(
           createAgentParams,
           currentAgentId,
           params.subAgentName,
@@ -413,6 +431,104 @@ export default class AgentCluster extends Runnable {
           return tool
         }
       }
+    }
+  }
+
+  private async getSkillPromptAndTools() {
+    if (!this.options.skillLoader) {
+      return {
+        prompt: '',
+        tools: [],
+      }
+    }
+
+    await this.options.skillLoader.loadAll()
+    const allSkillMeta = this.options.skillLoader.getAllSkillMeta()
+    if (allSkillMeta.length === 0) {
+      return {
+        prompt: '',
+        tools: [],
+      }
+    }
+
+    const readSkillInstructionTool = tool(
+      async ({ skillName }) => {
+        const skill = this.options.skillLoader?.getSkillByName(skillName)
+        if (!skill) {
+          throw new Error(`Skill ${skillName} not found.`)
+        }
+        return skill.instruction
+      },
+      {
+        name: AgentCluster.READ_SKILL_INSTRUCTION_NAME,
+        description: 'Read the complete skill document',
+        schema: z.object({
+          skillName: z.string().describe('The name of the skill to read.'),
+        }),
+        extras: {
+          skipReport: true,
+        },
+      },
+    )
+    const readSkillReference = tool(
+      async ({ skillName, path }) => {
+        const content = await this.options.skillLoader?.getReference(
+          skillName,
+          path,
+        )
+        if (!content) {
+          throw new Error(`Reference ${path} not found in skill ${skillName}.`)
+        }
+        return JSON.stringify({
+          skillName,
+          refContent: content,
+        })
+      },
+      {
+        name: AgentCluster.READ_SKILL_REFERENCE_NAME,
+        description: 'Read the skill references',
+        schema: z.object({
+          skillName: z.string().describe('The name of the skill to read.'),
+          path: z.string().describe('The path of the skill reference.'),
+        }),
+        extras: {
+          skipReport: true,
+        },
+      },
+    )
+    const executeSkillScript = tool(
+      async ({ skillName, path, args }) => {
+        return await this.options.skillLoader?.executeScript(
+          skillName,
+          path,
+          args,
+        )
+      },
+      {
+        name: AgentCluster.EXECUTE_SKILL_SCRIPT_NAME,
+        description: 'Execute the skill script',
+        schema: z.object({
+          skillName: z.string().describe('The name of the skill to execute.'),
+          path: z.string().describe('The path of the script to execute.'),
+          args: z
+            .object({})
+            .catchall(z.any())
+            .describe('The arguments to pass to the script.'),
+        }),
+        extras: {
+          skipReport: true,
+        },
+      },
+    )
+
+    return {
+      prompt: `你拥有扩展skill(技能)的能力，skill的使用步骤如下：
+1、当你需要了解某个skill的详细信息时，调用${AgentCluster.READ_SKILL_INSTRUCTION_NAME}来读取完整的skill文档
+2、当你需要了解某个skill的引用信息时，调用${AgentCluster.READ_SKILL_REFERENCE_NAME}来读取skill的引用
+3、当你需要执行某个skill的脚本时，调用${AgentCluster.EXECUTE_SKILL_SCRIPT_NAME}来执行skill的脚本
+以下展示了所有可用skill的名称和基础说明: 
+${allSkillMeta.map((meta) => JSON.stringify(meta)).join('\n')}`,
+      tools: [readSkillInstructionTool, readSkillReference, executeSkillScript],
     }
   }
 

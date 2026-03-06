@@ -31,6 +31,7 @@
     "koa-body": "^7.0.0",
     "koa-mount": "^4.2.0",
     "string-random": "^1.0.0",
+    "@shuttle-ai/skill": "workspace:*",
     "@shuttle-ai/agent": "workspace:*",
     "@shuttle-ai/type": "workspace:*",
     "langchain": "^1.2.17",

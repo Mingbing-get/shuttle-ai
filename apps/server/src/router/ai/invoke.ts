@@ -8,6 +8,7 @@ import {
   readableHook,
   FileMessageCollector,
 } from '@shuttle-ai/agent'
+import { SkillLoader } from '@shuttle-ai/skill'
 import { resolve } from 'path'
 
 import resolverManager from './resolverManager'
@@ -43,6 +44,10 @@ async function loadAgent(
   }
 }
 
+const skillLoader = new SkillLoader({
+  dir: resolve(process.cwd(), './skills'),
+})
+
 const invoke: Middleware = async (ctx) => {
   const { workId, prompt, autoRunScope } = ctx.request.body as {
     workId: string
@@ -66,6 +71,7 @@ const invoke: Middleware = async (ctx) => {
     messageCollector: new FileMessageCollector(
       resolve(process.cwd(), './agent/messages'),
     ),
+    skillLoader,
   })
 
   resolverManager.addAgentResolver(agentCluster.id, {

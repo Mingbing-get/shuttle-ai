@@ -54,6 +54,24 @@ export namespace ShuttleAi {
     }
   }
 
+  export namespace Skill {
+    export interface Metadata {
+      name: string
+      description: string
+      version: string
+      author?: string
+      keywords?: string[]
+    }
+
+    export interface Define {
+      path?: string
+      metadata: Metadata
+      instruction: string
+      references?: Record<string, string>
+      scripts?: Record<string, string>
+    }
+  }
+
   export namespace SubAgent {
     export interface Define {
       name: string
