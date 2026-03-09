@@ -1,5 +1,5 @@
 export * from '@shuttle-ai/type'
-import { SkillLoader } from '@shuttle-ai/skill'
+import { SkillLoader, NSkillLoader } from '@shuttle-ai/skill'
 import { ClientTool } from '@langchain/core/tools'
 import { RunnableConfig } from '@langchain/core/runnables'
 import { CreateAgentParams } from 'langchain'
@@ -9,6 +9,12 @@ declare module '@shuttle-ai/type' {
   export namespace ShuttleAi {
     export namespace Cluster {
       export type AutoRunScope = 'always' | 'read' | 'none'
+
+      export type SkillConfig =
+        | {
+            loader: SkillLoader
+          }
+        | NSkillLoader.Options
 
       export interface Options {
         /**
@@ -43,8 +49,6 @@ declare module '@shuttle-ai/type' {
           RunnableConfig,
           'configurable' | 'maxConcurrency' | 'recursionLimit' | 'timeout'
         >
-
-        skillLoader?: SkillLoader
       }
 
       export interface ToolsWithSubAgents {
@@ -69,9 +73,12 @@ declare module '@shuttle-ai/type' {
 
       export interface Hooks {
         onChunk?: (chunk: ShuttleAi.Message.AIChunk) => void
-        onAgentStart: (
-          options: ShuttleAi.Ask.AgentStart['data'],
-        ) => Promise<ToolsWithSubAgents & Omit<CreateAgentParams, 'tools'>>
+        onAgentStart: (options: ShuttleAi.Ask.AgentStart['data']) => Promise<
+          ToolsWithSubAgents &
+            Omit<CreateAgentParams, 'tools'> & {
+              skillConfig?: SkillConfig
+            }
+        >
         onAgentEnd?: (agentId: string) => void
         onToolStart: (
           tool: ShuttleAi.Message.AITool,

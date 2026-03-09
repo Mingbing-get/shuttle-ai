@@ -15,6 +15,8 @@ const mainAgent: ShuttleAi.Cluster.ToolsWithSubAgents &
       name: 'model_agent',
       description: '一个管理数据模型的智能体',
     },
+  ],
+  subAgents: [
     {
       name: 'page_agent',
       description: '一个管理数据页面的智能体',

@@ -8,6 +8,7 @@ import { randomUUID } from 'crypto'
 
 import { dynamicToolInterceptorMiddleware } from '../middleware'
 import { LLMMessage } from '../callback'
+import { SkillLoader } from 'packages/skill/src'
 
 export default class AgentCluster extends Runnable {
   static MAIN_AGENT_NAME = 'main_agent'
@@ -109,8 +110,12 @@ export default class AgentCluster extends Runnable {
       lazyAgents,
       middleware,
       systemPrompt,
+      skillConfig,
       ...extra
-    }: ShuttleAi.Cluster.ToolsWithSubAgents & Omit<CreateAgentParams, 'tools'>,
+    }: ShuttleAi.Cluster.ToolsWithSubAgents &
+      Omit<CreateAgentParams, 'tools'> & {
+        skillConfig?: ShuttleAi.Cluster.SkillConfig
+      },
     agentId: string,
     agentName: string,
   ) {
@@ -147,7 +152,7 @@ export default class AgentCluster extends Runnable {
       )
     }
 
-    const skillInfo = await this.getSkillPromptAndTools()
+    const skillInfo = await this.getSkillPromptAndTools(skillConfig)
     if (skillInfo.prompt) {
       systemPrompts.push(skillInfo.prompt)
     }
@@ -434,16 +439,23 @@ export default class AgentCluster extends Runnable {
     }
   }
 
-  private async getSkillPromptAndTools() {
-    if (!this.options.skillLoader) {
+  private async getSkillPromptAndTools(
+    skillConfig?: ShuttleAi.Cluster.SkillConfig,
+  ) {
+    if (!skillConfig) {
       return {
         prompt: '',
         tools: [],
       }
     }
 
-    await this.options.skillLoader.loadAll()
-    const allSkillMeta = this.options.skillLoader.getAllSkillMeta()
+    const skillLoader =
+      'loader' in skillConfig
+        ? skillConfig.loader
+        : new SkillLoader(skillConfig)
+
+    await skillLoader.loadAll()
+    const allSkillMeta = skillLoader.getAllSkillMeta()
     if (allSkillMeta.length === 0) {
       return {
         prompt: '',
@@ -453,7 +465,7 @@ export default class AgentCluster extends Runnable {
 
     const readSkillInstructionTool = tool(
       async ({ skillName }) => {
-        const skill = this.options.skillLoader?.getSkillByName(skillName)
+        const skill = skillLoader.getSkillByName(skillName)
         if (!skill) {
           throw new Error(`Skill ${skillName} not found.`)
         }
@@ -472,10 +484,7 @@ export default class AgentCluster extends Runnable {
     )
     const readSkillReference = tool(
       async ({ skillName, path }) => {
-        const content = await this.options.skillLoader?.getReference(
-          skillName,
-          path,
-        )
+        const content = await skillLoader.getReference(skillName, path)
         if (!content) {
           throw new Error(`Reference ${path} not found in skill ${skillName}.`)
         }
@@ -498,11 +507,7 @@ export default class AgentCluster extends Runnable {
     )
     const executeSkillScript = tool(
       async ({ skillName, path, args }) => {
-        return await this.options.skillLoader?.executeScript(
-          skillName,
-          path,
-          args,
-        )
+        return await skillLoader.executeScript(skillName, path, args)
       },
       {
         name: AgentCluster.EXECUTE_SKILL_SCRIPT_NAME,

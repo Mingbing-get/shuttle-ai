@@ -8,15 +8,16 @@ import {
   readableHook,
   FileMessageCollector,
 } from '@shuttle-ai/agent'
-import { SkillLoader } from '@shuttle-ai/skill'
 import { resolve } from 'path'
+import { existsSync } from 'fs'
 
 import resolverManager from './resolverManager'
 
-async function loadAgent(
-  name: string,
-): Promise<
-  ShuttleAi.Cluster.ToolsWithSubAgents & Omit<CreateAgentParams, 'tools'>
+async function loadAgent(name: string): Promise<
+  ShuttleAi.Cluster.ToolsWithSubAgents &
+    Omit<CreateAgentParams, 'tools'> & {
+      skillConfig?: ShuttleAi.Cluster.SkillConfig
+    }
 > {
   const model = new ChatOpenAI({
     modelName: process.env.OPENAI_DEFAULT_MODEL,
@@ -30,12 +31,15 @@ async function loadAgent(
   try {
     const configName = name.split('_').slice(0, -1).join('_')
     const config = await import(
-      resolve(process.cwd(), `./src/agent/${configName}`)
+      resolve(process.cwd(), `./src/agent/${configName}/extends`)
     )
+
+    const skillDir = resolve(process.cwd(), `./src/agent/${configName}/skills`)
 
     return {
       ...config.default,
       model,
+      skillConfig: existsSync(skillDir) ? { dir: skillDir } : undefined,
     }
   } catch (error) {
     return {
@@ -43,10 +47,6 @@ async function loadAgent(
     }
   }
 }
-
-const skillLoader = new SkillLoader({
-  dir: resolve(process.cwd(), './skills'),
-})
 
 const invoke: Middleware = async (ctx) => {
   const { workId, prompt, autoRunScope } = ctx.request.body as {
@@ -71,7 +71,6 @@ const invoke: Middleware = async (ctx) => {
     messageCollector: new FileMessageCollector(
       resolve(process.cwd(), './agent/messages'),
     ),
-    skillLoader,
   })
 
   resolverManager.addAgentResolver(agentCluster.id, {

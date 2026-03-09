@@ -1,0 +1,31 @@
+{
+  "id": "ep-2026-02-28-001",
+  "timestamp": "2026-02-28T14:30:00Z",
+  "skill": "debugger",
+  "situation": "用户报告接口 /workspace/:id 报错：Association with alias 'user' does not exist on WorkspaceMember",
+  "root_cause": "WorkspaceMember 模型中的关联定义缺少 'as: user' 别名，但 workspace.service.ts 中的查询语句尝试包含 'user' 关联",
+  "solution": "在 WorkspaceMember 模型中的关联定义添加 'as: user' 别名：WorkspaceMember.belongsTo(User, { as: 'user', foreignKey: 'userId' });",
+  "debugging_process": [
+    "从错误信息定位到 workspace.ts 第9行的 getWorkspaceHandler 接口",
+    "追踪调用链：route → controller → service → model",
+    "检查 workspace.service.ts 中的 getWorkspaceById 函数",
+    "发现 include 语句尝试包含 WorkspaceMember 的 'user' 关联",
+    "检查 WorkspaceMember 模型定义，发现关联缺少 'as' 别名",
+    "添加缺失的别名定义"
+  ],
+  "lesson": "Sequelize 关联的别名定义必须与查询中包含的别名完全匹配，默认关联使用模型名（大写）",
+  "related_pattern": "sequelize_association_alignment",
+  "impact": {
+    "before": "接口无法正常工作，返回关联不存在错误",
+    "after": "接口正常返回工作区数据，包含关联的用户信息"
+  },
+  "user_feedback": {
+    "rating": 9,
+    "comments": "问题定位准确，修复方案有效"
+  },
+  "preventive_measures": [
+    "建立关联命名规范",
+    "添加关联验证测试",
+    "创建关联配置检查工具"
+  ]
+}
