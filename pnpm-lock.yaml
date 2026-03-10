@@ -304,6 +304,9 @@ importers:
       '@shuttle-ai/type':
         specifier: workspace:*
         version: link:../type
+      adm-zip:
+        specifier: ^0.5.16
+        version: 0.5.16
       dockerode:
         specifier: ^4.0.9
         version: 4.0.9
@@ -314,6 +317,9 @@ importers:
         specifier: ^3.3.2
         version: 3.3.2
     devDependencies:
+      '@types/adm-zip':
+        specifier: ^0.5.7
+        version: 0.5.7
       '@types/dockerode':
         specifier: ^4.0.1
         version: 4.0.1
@@ -3079,6 +3085,12 @@ packages:
     dependencies:
       '@types/node': 20.19.31
 
+  /@types/adm-zip@0.5.7:
+    resolution: {integrity: sha512-DNEs/QvmyRLurdQPChqq0Md4zGvPwHerAJYWk9l2jCbD1VPpnzRJorOdiq4zsw09NFbYnhfsoEhWtxIzXpn2yw==}
+    dependencies:
+      '@types/node': 20.19.31
+    dev: true
+
   /@types/argparse@1.0.38:
     resolution: {integrity: sha512-ebDJ9b0e702Yr7pWgB0jzm+CX4Srzz8RcXtLJDJB+BSccqMa36uyH/zUsSYao5+BD1ytv3k3rPYCq4mAE1hsXA==}
     dev: true
@@ -3634,6 +3646,11 @@ packages:
     engines: {node: '>=0.4.0'}
     hasBin: true
     dev: true
+
+  /adm-zip@0.5.16:
+    resolution: {integrity: sha512-TGw5yVi4saajsSEgz25grObGHEUaDrniwvA2qwSC060KfqGPdglhvPMA2lPIoxs3PQIItj2iag35fONcQqgUaQ==}
+    engines: {node: '>=12.0'}
+    dev: false
 
   /ajv-draft-04@1.0.0(ajv@8.13.0):
     resolution: {integrity: sha512-mv00Te6nmYbRp5DCwclxtt7yV/joXJPGS7nM+97GdxvuttCOfgI3K4U25zboyeX0O+myI8ERluxQe5wljMmVIw==}
