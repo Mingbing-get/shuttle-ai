@@ -47,7 +47,7 @@ memory/
 
 ### 记录经验调用脚本
 
-脚本路径：`./scripts/saveExperience.py`
+脚本路径：`./scripts/saveExperience.js`
 参数说明：
 
 ```json

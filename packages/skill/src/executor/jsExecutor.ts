@@ -20,11 +20,11 @@ export default class JsExecutor implements NSkillLoader.Executor {
     })
 
     try {
-      await this.pullImage('node:18-alpine')
+      await this.pullImage('node:22-alpine')
 
       const container = await this.docker.createContainer({
         name: containerName,
-        Image: 'node:18-alpine',
+        Image: 'node:22-alpine',
         HostConfig: {
           Binds: [`${skillDir}:${workDir}`],
           Tmpfs: {
