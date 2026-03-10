@@ -1,49 +1,108 @@
-import { spawn } from 'child_process'
+import Docker from 'dockerode'
 import { NSkillLoader } from '../loader/type'
 
 export default class BashExecutor implements NSkillLoader.Executor {
-  async execute(script: string, args: Record<string, any>): Promise<string> {
-    return new Promise((resolve, reject) => {
-      const output: string[] = []
-      const errors: string[] = []
+  private docker: Docker
 
-      const env = {
-        ...Object.fromEntries(
-          Object.entries(args).map(([key, value]) => [
-            key,
-            typeof value === 'object' ? JSON.stringify(value) : String(value),
-          ]),
-        ),
+  constructor() {
+    this.docker = new Docker()
+  }
+
+  async execute(options: NSkillLoader.ScriptExecuteOptions): Promise<string> {
+    const { skillDir, scriptPath, args } = options
+
+    const containerName = `skill-executor-${Date.now()}`
+    const workDir = '/workspace'
+
+    const argList = Object.entries(args).map(([key, value]) => {
+      const v = typeof value === 'object' ? JSON.stringify(value) : value
+      return `${key}=${v}`
+    })
+
+    try {
+      await this.pullImage('ubuntu:latest')
+
+      const container = await this.docker.createContainer({
+        name: containerName,
+        Image: 'ubuntu:latest',
+        HostConfig: {
+          Binds: [`${skillDir}:${workDir}`],
+          Tmpfs: {
+            '/tmp': 'rw,size=100m',
+          },
+        },
+        WorkingDir: workDir,
+        Env: argList,
+        Cmd: ['sh', '-c', `cd ${workDir} && bash ${scriptPath}}`],
+        User: 'root',
+      })
+
+      await container.start()
+
+      const attachOptions = {
+        log: true,
+        stdout: true,
+        stderr: true,
+        stream: true,
       }
 
-      const bash = spawn('bash', ['-c', script], {
-        env,
-        stdio: ['pipe', 'pipe', 'pipe'],
-      })
+      const stream = await container.attach(attachOptions)
+      const output: Buffer[] = []
 
-      bash.stdout.on('data', (data) => {
-        output.push(data.toString())
-      })
+      return new Promise((resolve, reject) => {
+        stream.on('data', (chunk: Buffer) => {
+          output.push(chunk)
+        })
 
-      bash.stderr.on('data', (data) => {
-        errors.push(data.toString())
-      })
+        container.wait((err: Error | null, data: any) => {
+          if (err) {
+            reject(err)
+            return
+          }
 
-      bash.on('close', (code) => {
-        if (code !== 0) {
-          const errorMsg =
-            errors.length > 0
-              ? errors.join('\n')
-              : `Command exited with code ${code}`
-          resolve(`ERROR: ${errorMsg}`)
-        } else {
-          resolve(output.join('\n'))
-        }
-      })
+          const result = Buffer.concat(output).toString('utf-8')
 
-      bash.on('error', (error) => {
-        resolve(`ERROR: ${error.message}`)
+          container.remove({ force: true }).catch((removeErr: Error) => {
+            console.error('Failed to remove container:', removeErr)
+          })
+
+          resolve(result)
+        })
       })
-    })
+    } catch (error) {
+      try {
+        const container = this.docker.getContainer(containerName)
+        await container.remove({ force: true })
+      } catch (cleanupError) {
+        console.error('Failed to cleanup container:', cleanupError)
+      }
+      throw error
+    }
+  }
+
+  private async pullImage(imageName: string): Promise<void> {
+    try {
+      await this.docker.getImage(imageName).inspect()
+    } catch (error) {
+      await new Promise<void>((resolve, reject) => {
+        this.docker.pull(
+          imageName,
+          (err: Error | null, stream: NodeJS.ReadableStream) => {
+            if (err) {
+              reject(err)
+              return
+            }
+
+            this.docker.modem.followProgress(stream, (err: Error | null) => {
+              if (err) {
+                reject(err)
+              } else {
+                resolve()
+              }
+            })
+          },
+        )
+      })
+    }
   }
 }

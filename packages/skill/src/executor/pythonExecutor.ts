@@ -1,7 +1,7 @@
 import Docker from 'dockerode'
 import { NSkillLoader } from '../loader/type'
 
-export default class TsExecutor implements NSkillLoader.Executor {
+export default class PythonExecutor implements NSkillLoader.Executor {
   private docker: Docker
 
   constructor() {
@@ -20,11 +20,11 @@ export default class TsExecutor implements NSkillLoader.Executor {
     })
 
     try {
-      await this.pullImage('node:18-alpine')
+      await this.pullImage('python:3.11-alpine')
 
       const container = await this.docker.createContainer({
         name: containerName,
-        Image: 'node:18-alpine',
+        Image: 'python:3.11-alpine',
         HostConfig: {
           Binds: [`${skillDir}:${workDir}`],
           Tmpfs: {
@@ -33,11 +33,7 @@ export default class TsExecutor implements NSkillLoader.Executor {
         },
         WorkingDir: workDir,
         Env: argList,
-        Cmd: [
-          'sh',
-          '-c',
-          `cd ${workDir} && npm install -g tsx && npx tsx ${scriptPath}`,
-        ],
+        Cmd: ['sh', '-c', `cd ${workDir} && python ${scriptPath}`],
         User: 'root',
       })
 

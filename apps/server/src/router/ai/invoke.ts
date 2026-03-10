@@ -35,13 +35,13 @@ async function loadAgent(name: string): Promise<
     )
 
     const skillDir = resolve(process.cwd(), `./src/agent/${configName}/skills`)
-
     return {
       ...config.default,
       model,
       skillConfig: existsSync(skillDir) ? { dir: skillDir } : undefined,
     }
   } catch (error) {
+    console.log(error)
     return {
       model,
     }

@@ -6,7 +6,12 @@ import { ShuttleAi } from '@shuttle-ai/type'
 import JsonToSkillTransformer from './jsonToSill'
 import MdToSkillTransformer from './mdToSkill'
 import { NSkillLoader } from './type'
-import { JsExecutor, TsExecutor, BashExecutor } from '../executor'
+import {
+  JsExecutor,
+  TsExecutor,
+  BashExecutor,
+  PythonExecutor,
+} from '../executor'
 
 export default class SkillLoader {
   static readonly SkillFileName = 'SKILL'
@@ -24,10 +29,11 @@ export default class SkillLoader {
     NSkillLoader.SupportedScriptExtensions,
     NSkillLoader.Executor
   >([
-    ['.js', new JsExecutor({})],
-    ['.ts', new TsExecutor({})],
+    ['.js', new JsExecutor()],
+    ['.ts', new TsExecutor()],
     ['.sh', new BashExecutor()],
     ['.bash', new BashExecutor()],
+    ['.py', new PythonExecutor()],
   ])
 
   private defaultSupportExtends: NSkillLoader.SupportedExtensions[] = [
@@ -35,7 +41,7 @@ export default class SkillLoader {
     '.json',
   ]
   private defaultSupportScriptExtends: NSkillLoader.SupportedScriptExtensions[] =
-    ['.js', '.ts', '.sh', '.bash']
+    ['.js', '.ts', '.sh', '.bash', '.py']
 
   constructor(private options: NSkillLoader.Options) {}
 
@@ -183,12 +189,20 @@ export default class SkillLoader {
       throw new Error('Executor not found')
     }
 
-    const scriptContent = await this.getScript(skillName, path)
-    if (!scriptContent) {
-      throw new Error('Script not found')
+    const skill = this.getSkillByName(skillName)
+    if (!skill?.path) {
+      throw new Error('Skill path not found')
     }
 
-    return executor.execute(scriptContent, args)
+    const scriptRelativePath = path.startsWith('/') ? path.slice(1) : path
+    const scriptFullPath = join(skill.path, scriptRelativePath)
+
+    return executor.execute({
+      skillDir: skill.path,
+      scriptPath: scriptRelativePath,
+      scriptFullPath,
+      args,
+    })
   }
 
   async getScript(skillName: string, path: string) {

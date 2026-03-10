@@ -27,12 +27,14 @@
   },
   "dependencies": {
     "@shuttle-ai/type": "workspace:*",
+    "dockerode": "^4.0.9",
     "gray-matter": "^4.0.3",
     "node-fetch": "^3.3.2"
   },
   "devDependencies": {
-    "typescript": "^5.3.3",
-    "@types/node": "^20.11.0"
+    "@types/dockerode": "^4.0.1",
+    "@types/node": "^20.11.0",
+    "typescript": "^5.3.3"
   },
   "access": "public",
   "publishConfig": {

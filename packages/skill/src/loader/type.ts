@@ -2,7 +2,19 @@ import { ShuttleAi } from '@shuttle-ai/type'
 
 export namespace NSkillLoader {
   export type SupportedExtensions = '.md' | '.json'
-  export type SupportedScriptExtensions = '.js' | '.ts' | '.sh' | '.bash'
+  export type SupportedScriptExtensions =
+    | '.js'
+    | '.ts'
+    | '.sh'
+    | '.bash'
+    | '.py'
+
+  export interface ScriptExecuteOptions {
+    skillDir: string
+    scriptPath: string
+    scriptFullPath: string
+    args: Record<string, any>
+  }
 
   export interface Options {
     dir: string
@@ -17,6 +29,6 @@ export namespace NSkillLoader {
   }
 
   export interface Executor {
-    execute(script: string, args: Record<string, any>): Promise<string>
+    execute(options: ScriptExecuteOptions): Promise<string>
   }
 }
