@@ -72,6 +72,20 @@ export namespace ShuttleAi {
     }
   }
 
+  export namespace MCP {
+    export interface BaseServerConfig<T extends string> {
+      name: string
+      type: T
+    }
+
+    export interface StreamableHttpServerConfig extends BaseServerConfig<'streamable_http'> {
+      url: string
+      headers?: Record<string, string>
+    }
+
+    export type ServerConfig = StreamableHttpServerConfig
+  }
+
   export namespace SubAgent {
     export interface Define {
       name: string
