@@ -208,9 +208,10 @@ name: my-skill
 description: A sample skill
 version: 1.0.0
 author: Your Name
-tags:
-  - utility
-  - automation
+env:
+  requires:
+    - GEMINI_API_KEY
+    - DATABASE_URL
 ---
 
 这是技能的指令内容，描述如何使用这个技能。
@@ -225,7 +226,9 @@ tags:
     "description": "A sample skill",
     "version": "1.0.0",
     "author": "Your Name",
-    "tags": ["utility", "automation"]
+    "env": {
+      "requires": ["GEMINI_API_KEY", "DATABASE_URL"]
+    }
   },
   "instruction": "这是技能的指令内容，描述如何使用这个技能。"
 }

@@ -58,9 +58,13 @@ export namespace ShuttleAi {
     export interface Metadata {
       name: string
       description: string
-      version: string
+      version?: string
       author?: string
       keywords?: string[]
+      env?: {
+        requires?: string[]
+        variables?: string[]
+      }
     }
 
     export interface Define {

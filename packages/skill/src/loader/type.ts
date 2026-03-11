@@ -14,12 +14,14 @@ export namespace NSkillLoader {
     scriptPath: string
     scriptFullPath: string
     args: Record<string, any>
+    env?: Record<string, string>
   }
 
   export interface Options {
     dir: string
     supportedExtensions?: SupportedExtensions[]
     supportedScriptExtensions?: SupportedScriptExtensions[]
+    getEnv?: (skillName: string) => Promise<Record<string, string>>
   }
 
   export interface ContentToSkillTransformer {

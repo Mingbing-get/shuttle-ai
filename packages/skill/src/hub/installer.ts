@@ -29,7 +29,7 @@ export default class SkillHub {
   async install(
     source: NSkillHub.SkillSource,
     options: NSkillHub.InstallOptions,
-  ): Promise<string> {
+  ): Promise<string[]> {
     const installer = this.createInstaller(source)
     return installer.install(options)
   }

@@ -22,7 +22,7 @@ export default class GitHubInstaller implements NSkillHub.SkillInstaller {
     this.apiUrl = config?.githubApiUrl || 'https://api.github.com'
   }
 
-  async install(options: NSkillHub.InstallOptions): Promise<string> {
+  async install(options: NSkillHub.InstallOptions): Promise<string[]> {
     const { targetDir, force, onProgress } = options
 
     if (!existsSync(targetDir)) {
@@ -82,7 +82,7 @@ export default class GitHubInstaller implements NSkillHub.SkillInstaller {
       percentage: 100,
     })
 
-    return installedDirs[0]
+    return installedDirs
   }
 
   async validate(): Promise<boolean> {

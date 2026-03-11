@@ -35,7 +35,7 @@ export namespace NSkillHub {
   }
 
   export interface SkillInstaller {
-    install(options: InstallOptions): Promise<string>
+    install(options: InstallOptions): Promise<string[]>
     validate(): Promise<boolean>
     getSkillInfo(): Promise<ShuttleAi.Skill.Metadata>
   }

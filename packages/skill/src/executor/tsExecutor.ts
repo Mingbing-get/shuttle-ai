@@ -9,7 +9,7 @@ export default class TsExecutor implements NSkillLoader.Executor {
   }
 
   async execute(options: NSkillLoader.ScriptExecuteOptions): Promise<string> {
-    const { skillDir, scriptPath, args } = options
+    const { skillDir, scriptPath, args, env } = options
 
     const containerName = `skill-executor-${Date.now()}`
     const workDir = '/workspace'
@@ -18,6 +18,12 @@ export default class TsExecutor implements NSkillLoader.Executor {
       const v = typeof value === 'object' ? JSON.stringify(value) : value
       return `${key}=${v}`
     })
+
+    if (env) {
+      Object.entries(env).forEach(([key, value]) => {
+        argList.push(`${key}=${value}`)
+      })
+    }
 
     try {
       await this.pullImage('node:18-alpine')

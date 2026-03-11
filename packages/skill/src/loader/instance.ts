@@ -194,6 +194,21 @@ export default class SkillLoader {
       throw new Error('Skill path not found')
     }
 
+    const requiresEnv = skill.metadata?.env?.requires
+    if (requiresEnv?.length && !this.options.getEnv) {
+      throw new Error('getEnv not provided')
+    }
+
+    const env = skill.metadata?.env
+      ? await this.options.getEnv?.(skillName)
+      : undefined
+
+    requiresEnv?.forEach((key) => {
+      if (!env?.[key]) {
+        throw new Error(`Env '${key}' not found`)
+      }
+    })
+
     const scriptRelativePath = path.startsWith('/') ? path.slice(1) : path
     const scriptFullPath = join(skill.path, scriptRelativePath)
 
@@ -202,6 +217,7 @@ export default class SkillLoader {
       scriptPath: scriptRelativePath,
       scriptFullPath,
       args,
+      env,
     })
   }
 

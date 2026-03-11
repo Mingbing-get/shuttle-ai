@@ -9,7 +9,7 @@ import { NSkillHub } from './type'
 export default class ZipInstaller implements NSkillHub.SkillInstaller {
   constructor(private source: NSkillHub.ZipSource) {}
 
-  async install(options: NSkillHub.InstallOptions): Promise<string> {
+  async install(options: NSkillHub.InstallOptions): Promise<string[]> {
     const { targetDir, force, onProgress } = options
 
     if (!existsSync(targetDir)) {
@@ -80,7 +80,7 @@ export default class ZipInstaller implements NSkillHub.SkillInstaller {
       percentage: 100,
     })
 
-    return installedDirs[0]
+    return installedDirs
   }
 
   async validate(): Promise<boolean> {
