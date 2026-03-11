@@ -1,10 +1,11 @@
 import { ShuttleAi } from '@shuttle-ai/type'
-import { CreateAgentParams } from 'langchain'
 import { tool } from '@langchain/core/tools'
 import z from 'zod'
 
-const pageAgent: ShuttleAi.Cluster.ToolsWithSubAgents &
-  Pick<CreateAgentParams, 'systemPrompt'> = {
+const pageAgent: Omit<
+  ShuttleAi.Cluster.AgentStartReturn,
+  'model' | 'skillConfig'
+> = {
   systemPrompt:
     '你是一个数据页面的智能体，你可以查询、创建、更新、删除数据页面。',
   lazyTools: [

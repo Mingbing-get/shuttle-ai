@@ -1,8 +1,9 @@
 import { ShuttleAi } from '@shuttle-ai/type'
-import { CreateAgentParams } from 'langchain'
 
-const mainAgent: ShuttleAi.Cluster.ToolsWithSubAgents &
-  Pick<CreateAgentParams, 'systemPrompt'> = {
+const mainAgent: Omit<
+  ShuttleAi.Cluster.AgentStartReturn,
+  'model' | 'skillConfig'
+> = {
   systemPrompt: '你是一个总管的智能体，你可以调用其他智能体来处理用户的请求。',
   tools: [
     {
@@ -20,6 +21,13 @@ const mainAgent: ShuttleAi.Cluster.ToolsWithSubAgents &
     {
       name: 'page_agent',
       description: '一个管理数据页面的智能体',
+    },
+  ],
+  mcps: [
+    {
+      name: 'MCP-ECharts',
+      type: 'streamable_http',
+      url: 'https://mcp.api-inference.modelscope.net/70338ac4b30843/mcp',
     },
   ],
 }

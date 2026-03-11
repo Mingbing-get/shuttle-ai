@@ -71,14 +71,17 @@ declare module '@shuttle-ai/type' {
         lazyAgents?: Omit<ShuttleAi.SubAgent.Define, 'tools' | 'subAgents'>[]
       }
 
+      export interface AgentStartReturn
+        extends ToolsWithSubAgents, Omit<CreateAgentParams, 'tools'> {
+        skillConfig?: SkillConfig
+        mcps?: MCP.ServerConfig[]
+      }
+
       export interface Hooks {
         onChunk?: (chunk: ShuttleAi.Message.AIChunk) => void
-        onAgentStart: (options: ShuttleAi.Ask.AgentStart['data']) => Promise<
-          ToolsWithSubAgents &
-            Omit<CreateAgentParams, 'tools'> & {
-              skillConfig?: SkillConfig
-            }
-        >
+        onAgentStart: (
+          options: ShuttleAi.Ask.AgentStart['data'],
+        ) => Promise<AgentStartReturn>
         onAgentEnd?: (agentId: string) => void
         onToolStart: (
           tool: ShuttleAi.Message.AITool,

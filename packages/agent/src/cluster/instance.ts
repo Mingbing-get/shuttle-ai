@@ -1,14 +1,15 @@
 import { Runnable } from '@langchain/core/runnables'
-import { createAgent, CreateAgentParams } from 'langchain'
+import { createAgent } from 'langchain'
 import { HumanMessage, AIMessage, ToolMessage } from '@langchain/core/messages'
 import { ClientTool, tool } from '@langchain/core/tools'
 import { ShuttleAi } from '@shuttle-ai/type'
+import { MCPClient } from '@shuttle-ai/mcp-client'
+import { SkillLoader } from '@shuttle-ai/skill'
 import { z } from 'zod'
 import { randomUUID } from 'crypto'
 
 import { dynamicToolInterceptorMiddleware } from '../middleware'
 import { LLMMessage } from '../callback'
-import { SkillLoader } from 'packages/skill/src'
 
 export default class AgentCluster extends Runnable {
   static MAIN_AGENT_NAME = 'main_agent'
@@ -106,19 +107,20 @@ export default class AgentCluster extends Runnable {
     {
       tools,
       subAgents,
-      lazyTools,
+      lazyTools: _lazyTools,
       lazyAgents,
       middleware,
       systemPrompt,
       skillConfig,
+      mcps,
       ...extra
-    }: ShuttleAi.Cluster.ToolsWithSubAgents &
-      Omit<CreateAgentParams, 'tools'> & {
-        skillConfig?: ShuttleAi.Cluster.SkillConfig
-      },
+    }: ShuttleAi.Cluster.AgentStartReturn,
     agentId: string,
     agentName: string,
   ) {
+    const mcpTools = await this.loadMCPTools(mcps)
+    const lazyTools = [...(_lazyTools || []), ...mcpTools]
+
     const normalizedTools: ClientTool[] = []
     if (tools?.length) {
       normalizedTools.push(...this.normalizationTools(tools))
@@ -367,15 +369,12 @@ export default class AgentCluster extends Runnable {
           isLazy: true,
         })
 
+        const mcpTools = await this.loadMCPTools(createAgentParams.mcps)
+        const lazyTools = [...(createAgentParams.lazyTools || []), ...mcpTools]
         const prompts = []
-        if (createAgentParams.lazyTools?.length) {
-          this.lazyTools[agentName] = createAgentParams.lazyTools
-          prompts.push(
-            this.lazyToolsToSystemPrompt(
-              createAgentParams.lazyTools,
-              agentName,
-            ),
-          )
+        if (lazyTools.length) {
+          this.lazyTools[agentName] = lazyTools
+          prompts.push(this.lazyToolsToSystemPrompt(lazyTools, agentName))
         }
         if (createAgentParams.lazyAgents?.length) {
           prompts.push(
@@ -591,9 +590,14 @@ ${allSkillMeta.map((meta) => JSON.stringify(meta)).join('\n')}`,
             content: '',
             isLazy: true,
           })
+          const mcpTools = await this.loadMCPTools(createAgentParams.mcps)
+          const lazyTools = [
+            ...(createAgentParams.lazyTools || []),
+            ...mcpTools,
+          ]
 
-          if (createAgentParams.lazyTools?.length) {
-            this.lazyTools[agentName] = createAgentParams.lazyTools
+          if (lazyTools.length) {
+            this.lazyTools[agentName] = lazyTools
           }
         },
       )
@@ -607,5 +611,46 @@ ${allSkillMeta.map((meta) => JSON.stringify(meta)).join('\n')}`,
   private anyToString(v: any) {
     if (typeof v === 'object') return JSON.stringify(v)
     return v
+  }
+
+  private async loadMCPTools(mcps?: ShuttleAi.MCP.ServerConfig[]) {
+    if (!mcps?.length) return []
+
+    const client = new MCPClient({
+      servers: mcps,
+    })
+
+    await client.connect()
+
+    const mcpToolMap = await client.listTools()
+
+    const tools: ClientTool[] = []
+
+    for (const [serverName, mcpTools] of mcpToolMap.entries()) {
+      mcpTools.forEach((mcpTool) => {
+        tools.push(
+          tool(
+            async (args) => {
+              const res = await client.callTool(serverName, {
+                name: mcpTool.name,
+                arguments: args as any,
+              })
+
+              return JSON.stringify(res)
+            },
+            {
+              name: mcpTool.name,
+              description: mcpTool.description,
+              schema: mcpTool.inputSchema,
+              extras: {
+                scope: 'autoRun',
+              },
+            },
+          ),
+        )
+      })
+    }
+
+    return tools
   }
 }

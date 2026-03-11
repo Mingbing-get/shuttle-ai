@@ -1,6 +1,5 @@
 import { Readable } from 'stream'
 import { ShuttleAi } from '@shuttle-ai/type'
-import { CreateAgentParams } from 'langchain'
 
 interface ReadableHookLink extends Omit<
   ShuttleAi.Cluster.Hooks,
@@ -13,9 +12,7 @@ interface ReadableHookLink extends Omit<
 export default function createReadableHook(
   getAgentParamsFromServer: (
     agentName: string,
-  ) => Promise<
-    ShuttleAi.Cluster.ToolsWithSubAgents & Omit<CreateAgentParams, 'tools'>
-  >,
+  ) => Promise<ShuttleAi.Cluster.AgentStartReturn>,
   hookLinks?: ReadableHookLink[],
 ) {
   const initAgentResolver: Record<
@@ -123,6 +120,7 @@ export default function createReadableHook(
           ...(remoteParams.lazyAgents || []),
         ],
         lazyTools: [...(serverParams?.lazyTools || []), ...lazyTools],
+        mcps: [...(serverParams?.mcps || []), ...(remoteParams.mcps || [])],
       }
     },
     onAgentEnd(agentId) {

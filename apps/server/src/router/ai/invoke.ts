@@ -41,7 +41,6 @@ async function loadAgent(name: string): Promise<
       skillConfig: existsSync(skillDir) ? { dir: skillDir } : undefined,
     }
   } catch (error) {
-    console.log(error)
     return {
       model,
     }

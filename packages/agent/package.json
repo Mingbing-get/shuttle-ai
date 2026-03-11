@@ -28,6 +28,7 @@
   "dependencies": {
     "@shuttle-ai/type": "workspace:*",
     "@shuttle-ai/skill": "workspace:*",
+    "@shuttle-ai/mcp-client": "workspace:*",
     "langchain": "^1.2.17",
     "@langchain/core": "^1.1.19",
     "@langchain/openai": "^1.2.4",

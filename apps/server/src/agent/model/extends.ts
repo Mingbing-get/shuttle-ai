@@ -1,10 +1,11 @@
 import { ShuttleAi } from '@shuttle-ai/type'
-import { CreateAgentParams } from 'langchain'
 import { tool } from '@langchain/core/tools'
 import z from 'zod'
 
-const modelAgent: ShuttleAi.Cluster.ToolsWithSubAgents &
-  Pick<CreateAgentParams, 'systemPrompt'> = {
+const modelAgent: Omit<
+  ShuttleAi.Cluster.AgentStartReturn,
+  'model' | 'skillConfig'
+> = {
   systemPrompt:
     '你是一个数据模型的智能体，你可以查询、创建、更新、删除数据模型。',
   lazyTools: [

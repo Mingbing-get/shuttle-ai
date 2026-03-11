@@ -97,6 +97,11 @@ export namespace ShuttleAi {
 
       lazyTools?: Tool.Define[]
       lazyAgents?: Omit<Define, 'tools' | 'subAgents'>[]
+
+      /**
+       * mcp 中的工具将作为lazyTools传入大模型
+       */
+      mcps?: MCP.ServerConfig[]
     }
   }
 
@@ -211,6 +216,7 @@ export namespace ShuttleAi {
           subAgents?: SubAgent.Define[]
           lazyTools?: Tool.Define[]
           lazyAgents?: Omit<SubAgent.Define, 'tools' | 'subAgents'>[]
+          mcps?: MCP.ServerConfig[]
         }
       }
     > {}
