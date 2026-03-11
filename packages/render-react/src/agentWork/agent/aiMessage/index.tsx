@@ -30,14 +30,15 @@ export default function AiMessage({ messageId }: Props) {
     <div className="agent-work-agent-message ai-message">
       <div className="ai-message-content">
         <MarkdownRender>{message.content}</MarkdownRender>
+
+        {!!message.toolCalls?.length && (
+          <div className="agent-work-agent-tools" style={{ paddingTop: 12 }}>
+            {message.toolCalls.map((toolCall) => {
+              return <ToolRender key={toolCall.id} toolCall={toolCall} />
+            })}
+          </div>
+        )}
       </div>
-      {!!message.toolCalls?.length && (
-        <div className="agent-work-agent-tools">
-          {message.toolCalls.map((toolCall) => {
-            return <ToolRender key={toolCall.id} toolCall={toolCall} />
-          })}
-        </div>
-      )}
       {subAgents.length > 0 && (
         <div className="agent-work-agent-children">
           {subAgents.map((subAgent) => {
