@@ -21,6 +21,8 @@ export namespace NSkillLoader {
     dir: string
     supportedExtensions?: SupportedExtensions[]
     supportedScriptExtensions?: SupportedScriptExtensions[]
+    pickSkillNames?: string[]
+    omitSkillNames?: string[]
     getEnv?: (skillName: string) => Promise<Record<string, string>>
   }
 

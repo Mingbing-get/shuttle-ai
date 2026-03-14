@@ -82,7 +82,7 @@ export default class GitHubInstaller implements NSkillHub.SkillInstaller {
       percentage: 100,
     })
 
-    return installedDirs
+    return Array.from(skillGroups.keys())
   }
 
   async validate(): Promise<boolean> {

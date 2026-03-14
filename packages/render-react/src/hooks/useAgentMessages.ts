@@ -9,6 +9,8 @@ export default function useAgentMessages(agent: Agent) {
       setMessages([...messages])
     })
 
+    setMessages(agent.messages)
+
     return off
   }, [agent])
 

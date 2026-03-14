@@ -7,7 +7,12 @@ import { useWorkStatus, useWorkAutoRunScope } from '../../hooks'
 
 import './index.scss'
 
-export default function AgentWorkAction() {
+interface Props {
+  disabled?: boolean
+  extraActions?: React.ReactNode
+}
+
+export default function AgentWorkAction({ disabled, extraActions }: Props) {
   const [inputValue, setInputValue] = useState('')
   const work = useWork()
   const status = useWorkStatus(work)
@@ -60,7 +65,7 @@ export default function AgentWorkAction() {
   return (
     <div className="agent-work-action">
       <Input.TextArea
-        disabled={status !== 'idle'}
+        disabled={status !== 'idle' || disabled}
         onPressEnter={handlePressEnter}
         value={inputValue}
         onChange={(e) => setInputValue(e.target.value)}
@@ -68,9 +73,10 @@ export default function AgentWorkAction() {
         autoSize={false}
       />
       <div className="agent-work-action-btns">
+        {extraActions}
         <Select
           style={{ minWidth: 130 }}
-          disabled={status !== 'idle'}
+          disabled={status !== 'idle' || disabled}
           value={scope}
           options={autoRunOptions}
           onChange={(value) => work.setAutoRunScope(value)}
@@ -83,7 +89,7 @@ export default function AgentWorkAction() {
           />
         ) : (
           <Button
-            disabled={status !== 'idle' || !inputValue}
+            disabled={status !== 'idle' || !inputValue || disabled}
             loading={status === 'pending'}
             onClick={handleSend}
             type="primary"

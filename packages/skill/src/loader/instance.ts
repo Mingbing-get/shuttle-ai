@@ -74,6 +74,18 @@ export default class SkillLoader {
     const entries = await readdir(this.options.dir, { withFileTypes: true })
     for (const entry of entries) {
       if (entry.isDirectory()) {
+        if (this.options.pickSkillNames) {
+          if (!this.options.pickSkillNames.includes(entry.name)) {
+            continue
+          }
+        }
+
+        if (this.options.omitSkillNames) {
+          if (this.options.omitSkillNames.includes(entry.name)) {
+            continue
+          }
+        }
+
         await this.load(join(this.options.dir, entry.name))
       }
     }

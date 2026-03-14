@@ -108,6 +108,7 @@ declare module '@shuttle-ai/type' {
 
       export interface InvokeOptions {
         context?: Context
+        revoke?: boolean
         [x: string]: any
       }
     }

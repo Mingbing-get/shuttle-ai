@@ -34,20 +34,23 @@ export default function AgentWorkAgent({ agent, isRoot }: Porps) {
     return newMessage
   }, [messages, closeMessageIds])
 
-  const handleToggleClose = useCallback(async (messageId: string) => {
-    if (agent.status === 'waitRevoke') {
-      await agent.revoke()
-      return
-    }
-
-    setCloseMessageIds((old) => {
-      if (old.includes(messageId)) {
-        return old.filter((id) => id !== messageId)
+  const handleToggleClose = useCallback(
+    async (messageId: string) => {
+      if (agent.status === 'waitRevoke') {
+        await agent.revoke()
+        return
       }
 
-      return [...old, messageId]
-    })
-  }, [])
+      setCloseMessageIds((old) => {
+        if (old.includes(messageId)) {
+          return old.filter((id) => id !== messageId)
+        }
+
+        return [...old, messageId]
+      })
+    },
+    [agent],
+  )
 
   return (
     <AgentProvider agent={agent}>

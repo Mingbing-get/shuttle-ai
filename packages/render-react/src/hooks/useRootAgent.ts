@@ -9,8 +9,10 @@ export default function useRootAgent(work: AgentWork) {
       setRootAgent(work.getRootAgent())
     })
 
+    setRootAgent(work.getRootAgent())
+
     return removeListener
-  }, [])
+  }, [work])
 
   return rootAgent
 }

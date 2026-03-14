@@ -9,8 +9,10 @@ export default function useWorkStatus(work: AgentWork) {
       setStatus(work.status)
     })
 
+    setStatus(work.status)
+
     return removeListener
-  }, [])
+  }, [work])
 
   return status
 }

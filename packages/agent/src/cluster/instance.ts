@@ -69,7 +69,9 @@ export default class AgentCluster extends Runnable {
       role: 'user',
       content: input,
     })
-    const oldMessages = await this.revokeMessages(this.id)
+    const oldMessages = options?.revoke
+      ? await this.revokeMessages(this.id)
+      : []
     const result = agent.streamEvents(
       {
         messages: [...oldMessages, { role: 'user', content: input }],

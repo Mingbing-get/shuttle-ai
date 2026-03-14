@@ -11,9 +11,17 @@ interface Props {
   className?: string
   style?: React.CSSProperties
   empty?: React.ReactNode
+  extraActions?: React.ReactNode
+  disabled?: boolean
 }
 
-export default function AgentWorkRender({ className, style, empty }: Props) {
+export default function AgentWorkRender({
+  className,
+  style,
+  empty,
+  extraActions,
+  disabled,
+}: Props) {
   const work = useWork()
   const rootAgent = useRootAgent(work)
 
@@ -58,7 +66,7 @@ export default function AgentWorkRender({ className, style, empty }: Props) {
           empty || <Empty description="暂无聊天" />
         )}
       </div>
-      <Action />
+      <Action disabled={disabled} extraActions={extraActions} />
     </div>
   )
 }

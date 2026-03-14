@@ -9,8 +9,10 @@ export default function useWorkAutoRunScope(work: AgentWork) {
       setScope(work.autoRunScope)
     })
 
+    setScope(work.autoRunScope)
+
     return removeListener
-  }, [])
+  }, [work])
 
   return scope
 }

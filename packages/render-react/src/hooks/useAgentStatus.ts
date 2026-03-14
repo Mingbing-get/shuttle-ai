@@ -9,6 +9,8 @@ export default function useAgentStatus(agent: Agent) {
       setStatus(status)
     })
 
+    setStatus(agent.status)
+
     return off
   }, [agent])
 
