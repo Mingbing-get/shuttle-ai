@@ -4,10 +4,12 @@ import { Empty } from 'antd'
 import { AgentWork } from '@shuttle-ai/client'
 import { ShuttleAi } from '@shuttle-ai/type'
 
-import { AgentWorkProvider } from '../../context'
+import { agentWorkContext } from '../../context/agentWork/base'
 import WithContextAgent from './withContextAgent'
 import Action from '../action'
-import { useRootAgent } from '../../hooks'
+import { useRootAgent, useRefCallback } from '../../hooks'
+import useKeepScroll from './useKeepScroll'
+import useLoadToScroll from './useLoadToScroll'
 
 interface Props extends ShuttleAi.Client.Work.Options {
   className?: string
@@ -18,6 +20,8 @@ interface Props extends ShuttleAi.Client.Work.Options {
   works: AgentWork[]
   context: ShuttleAi.Client.ReactRender.Context
   onAutoRunScopeChange?: (autoRunScope: string) => void
+  onWorksChange?: (works: AgentWork[]) => void
+  onStatusChange?: (status: ShuttleAi.Client.Work.Status) => void
   onTouchTop?: () => void
   topLoading?: React.ReactNode
 }
@@ -34,6 +38,8 @@ export default function AgentWorkRender({
   initAgent,
   autoRunScope,
   onAutoRunScopeChange,
+  onWorksChange,
+  onStatusChange,
   onTouchTop,
   topLoading,
 }: Props) {
@@ -49,6 +55,14 @@ export default function AgentWorkRender({
   )
   const currentWorkRef = useRef(currentWork)
   const currentRootAgent = useRootAgent(currentWork)
+  const _onWorksChange = useRefCallback(onWorksChange)
+  const _onAutoRunScopeChange = useRefCallback(onAutoRunScopeChange)
+  const _onStatusChange = useRefCallback(onStatusChange)
+  const _onTouchTop = useRefCallback(onTouchTop)
+
+  const { markFirstWorkRootAgent, scrollToFirstWorkRootAgent } =
+    useKeepScroll(works)
+  useLoadToScroll(works, wrapper, _onTouchTop)
 
   useEffect(() => {
     currentWorkRef.current = currentWork
@@ -56,6 +70,10 @@ export default function AgentWorkRender({
 
   useEffect(() => {
     setShowWorks(works)
+
+    requestAnimationFrame(() => {
+      scrollToFirstWorkRootAgent()
+    })
   }, [works])
 
   useEffect(() => {
@@ -64,6 +82,7 @@ export default function AgentWorkRender({
 
   useEffect(() => {
     const offStatus = currentWork.on('status', () => {
+      _onStatusChange(currentWork.status)
       if (currentWork.status === 'idle') {
         setCurrentWork(
           new AgentWork({
@@ -72,12 +91,16 @@ export default function AgentWorkRender({
             autoRunScope: currentWork.autoRunScope,
           }),
         )
-        setShowWorks((old) => [...old, currentWork])
+        setShowWorks((old) => {
+          const newWorks = [...old, currentWork]
+          _onWorksChange(newWorks)
+          return newWorks
+        })
       }
     })
 
     const offAutoScope = currentWork.on('autoRunScope', () => {
-      onAutoRunScopeChange?.(currentWork.autoRunScope)
+      _onAutoRunScopeChange(currentWork.autoRunScope)
     })
 
     return () => {
@@ -104,27 +127,30 @@ export default function AgentWorkRender({
     return () => observer.disconnect()
   }, [])
 
-  const handleScroll = useCallback(
-    (e: React.UIEvent<HTMLDivElement>) => {
-      if (!wrapper.current || !e.isTrusted) return
+  const handleScroll = useCallback((e: React.UIEvent<HTMLDivElement>) => {
+    if (!wrapper.current || !e.isTrusted) return
 
-      if (wrapper.current.scrollTop === 0) {
-        onTouchTop?.()
-      }
+    if (wrapper.current.scrollTop === 0) {
+      markFirstWorkRootAgent()
+      _onTouchTop?.()
+    }
 
-      autoScroll.current =
-        Math.abs(
-          wrapper.current.scrollHeight -
-            wrapper.current.scrollTop -
-            wrapper.current.clientHeight,
-        ) < 8
-    },
-    [onTouchTop],
-  )
+    autoScroll.current =
+      Math.abs(
+        wrapper.current.scrollHeight -
+          wrapper.current.scrollTop -
+          wrapper.current.clientHeight,
+      ) < 8
+  }, [])
 
   const isEmpty = useMemo(
     () => showWorks.length === 0 && !currentRootAgent,
     [showWorks, currentRootAgent],
+  )
+
+  const actionProviderValue = useMemo(
+    () => ({ work: currentWork, context }),
+    [currentWork, context],
   )
 
   return (
@@ -137,9 +163,9 @@ export default function AgentWorkRender({
         <WithContextAgent work={currentWork} context={context} />
         {isEmpty && (empty || <Empty description="暂无聊天" />)}
       </div>
-      <AgentWorkProvider work={currentWork} context={context}>
+      <agentWorkContext.Provider value={actionProviderValue}>
         <Action disabled={disabled} extraActions={extraActions} />
-      </AgentWorkProvider>
+      </agentWorkContext.Provider>
     </div>
   )
 }

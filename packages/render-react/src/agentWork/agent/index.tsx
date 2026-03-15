@@ -55,6 +55,7 @@ export default function AgentWorkAgent({ agent, isRoot }: Porps) {
   return (
     <AgentProvider agent={agent}>
       <div
+        data-agent-id={agent.options.id}
         className={classNames('agent-work-agent', isRoot && 'is-root-agent')}
       >
         {showMessages.map((message) => {

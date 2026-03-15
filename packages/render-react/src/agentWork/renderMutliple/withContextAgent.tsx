@@ -1,9 +1,10 @@
+import { useMemo } from 'react'
 import { AgentWork } from '@shuttle-ai/client'
 import { ShuttleAi } from '@shuttle-ai/type'
 
-import { AgentWorkProvider } from '../../context'
 import Agent from '../agent'
 import { useRootAgent } from '../../hooks'
+import { agentWorkContext } from '../../context/agentWork/base'
 
 interface Props {
   work: AgentWork
@@ -13,11 +14,16 @@ interface Props {
 export default function WithContextAgent({ work, context }: Props) {
   const rootAgent = useRootAgent(work)
 
+  const providerValue = useMemo(
+    () => ({ work: work, context }),
+    [context, work],
+  )
+
   if (!rootAgent) return null
 
   return (
-    <AgentWorkProvider work={work} context={context}>
+    <agentWorkContext.Provider value={providerValue}>
       <Agent agent={rootAgent} />
-    </AgentWorkProvider>
+    </agentWorkContext.Provider>
   )
 }
