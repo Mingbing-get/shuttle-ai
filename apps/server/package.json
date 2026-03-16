@@ -35,6 +35,7 @@
     "@shuttle-ai/mcp-client": "workspace:*",
     "@shuttle-ai/agent": "workspace:*",
     "@shuttle-ai/type": "workspace:*",
+    "@shuttle-ai/memory": "workspace:*",
     "langchain": "^1.2.17",
     "@langchain/core": "^1.1.19",
     "@langchain/openai": "^1.2.4",

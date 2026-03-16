@@ -479,7 +479,7 @@ export default class AgentCluster extends Runnable {
           skillName: z.string().describe('The name of the skill to read.'),
         }),
         extras: {
-          skipReport: true,
+          scope: 'read',
         },
       },
     )
@@ -502,7 +502,7 @@ export default class AgentCluster extends Runnable {
           path: z.string().describe('The path of the skill reference.'),
         }),
         extras: {
-          skipReport: true,
+          scope: 'read',
         },
       },
     )
@@ -522,7 +522,7 @@ export default class AgentCluster extends Runnable {
             .describe('The arguments to pass to the script.'),
         }),
         extras: {
-          skipReport: true,
+          scope: 'write',
         },
       },
     )

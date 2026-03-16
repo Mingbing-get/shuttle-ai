@@ -19,7 +19,9 @@ interface Props extends ShuttleAi.Client.Work.Options {
   disabled?: boolean
   works: AgentWork[]
   context: ShuttleAi.Client.ReactRender.Context
-  onAutoRunScopeChange?: (autoRunScope: string) => void
+  onAutoRunScopeChange?: (
+    autoRunScope: ShuttleAi.Client.Work.AutoRunScope,
+  ) => void
   onWorksChange?: (works: AgentWork[]) => void
   onStatusChange?: (status: ShuttleAi.Client.Work.Status) => void
   onTouchTop?: () => void

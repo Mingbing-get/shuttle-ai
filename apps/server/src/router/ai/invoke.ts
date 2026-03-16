@@ -3,6 +3,7 @@ import { CreateAgentParams } from 'langchain'
 import { ChatOpenAI } from '@langchain/openai'
 import { Middleware } from '@koa/router'
 import { ShuttleAi } from '@shuttle-ai/type'
+import { createUseMemoryTools, OrganizeMemory } from '@shuttle-ai/memory'
 import {
   AgentCluster,
   readableHook,
@@ -35,8 +36,16 @@ async function loadAgent(name: string): Promise<
     )
 
     const skillDir = resolve(process.cwd(), `./src/agent/${configName}/skills`)
+    const memoryTools = createUseMemoryTools({
+      dir: resolve(process.cwd(), './agent/memory'),
+    })
     return {
       ...config.default,
+      tools: [...(config.default.tools || []), ...memoryTools],
+      systemPrompt: [
+        config.default.systemPrompt || '',
+        `你拥有长期的**记忆系统**，在需要回忆之前的对话内容或借鉴以前的经验时，可以使用${memoryTools.map((tool) => tool.name).join('、')}等方法`,
+      ].join('\n'),
       model,
       skillConfig: existsSync(skillDir) ? { dir: skillDir } : undefined,
     }
@@ -82,6 +91,18 @@ const invoke: Middleware = async (ctx) => {
     close()
     agentCluster.stop()
     resolverManager.removeAgentResolver(agentCluster.id)
+
+    const organizeMemory = new OrganizeMemory({
+      dir: resolve(process.cwd(), './agent/memory'),
+      model: new ChatOpenAI({
+        modelName: process.env.OPENAI_DEFAULT_MODEL,
+        apiKey: process.env.OPENAI_API_KEY,
+        configuration: {
+          baseURL: process.env.OPENAI_API_URL,
+        },
+      }),
+    })
+    organizeMemory.start(agentCluster.getMessages())
   }
 
   ctx.req.on('close', closeAll)
