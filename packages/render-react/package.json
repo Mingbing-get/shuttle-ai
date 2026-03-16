@@ -1,6 +1,6 @@
 {
   "name": "@shuttle-ai/render-react",
-  "version": "0.0.12",
+  "version": "0.0.13",
   "author": "Mingbing-get <1508850533@qq.com>",
   "license": "MIT",
   "description": "Shuttle AI web端智能体react渲染库",
