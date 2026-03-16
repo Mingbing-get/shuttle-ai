@@ -30,7 +30,7 @@ export default function createUseMemoryTools(
         return content
       },
       {
-        name: 'list_directory_index',
+        name: 'memory_directory_index',
         description:
           '读取指定目录下的 index.md 文件内容。模型应从根目录 / 开始，通过此工具了解当前目录的结构和每个文件的简要描述。',
         schema: z.object({

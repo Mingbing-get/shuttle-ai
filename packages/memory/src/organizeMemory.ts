@@ -121,7 +121,7 @@ export default class OrganizeMemory {
 
 ## 2. 工具调用规范
 
-### A. 探索阶段：\`list_directory_index\`
+### A. 探索阶段：\`memory_directory_index\`
 - **触发时机**：对话开始时、切换话题时、或需要寻找特定背景时。
 - **强制要求**：禁止在未读取父目录 \`index.md\` 的情况下猜测子路径。
 

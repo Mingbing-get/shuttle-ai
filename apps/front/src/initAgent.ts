@@ -4,6 +4,9 @@ import {
   readSkillInstructionTool,
   readSkillReferenceTool,
   executeSkillScriptTool,
+  memoryDirectoryIndexTool,
+  searchMemoryGloballyTool,
+  readMemoryFileTool,
 } from '@shuttle-ai/render-react'
 import '@shuttle-ai/client'
 import '@shuttle-ai/render-react'
@@ -69,6 +72,9 @@ const getAgentParams = (
         readSkillInstructionTool,
         readSkillReferenceTool,
         executeSkillScriptTool,
+        memoryDirectoryIndexTool,
+        searchMemoryGloballyTool,
+        readMemoryFileTool,
       ],
     }
   }
@@ -81,6 +87,9 @@ const getAgentParams = (
       readSkillInstructionTool,
       readSkillReferenceTool,
       executeSkillScriptTool,
+      memoryDirectoryIndexTool,
+      searchMemoryGloballyTool,
+      readMemoryFileTool,
     ],
   }
 }
