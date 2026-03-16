@@ -1,5 +1,10 @@
 import { ShuttleAi } from '@shuttle-ai/type'
-import { writeTodosTool } from '@shuttle-ai/render-react'
+import {
+  writeTodosTool,
+  readSkillInstructionTool,
+  readSkillReferenceTool,
+  executeSkillScriptTool,
+} from '@shuttle-ai/render-react'
 import '@shuttle-ai/client'
 import '@shuttle-ai/render-react'
 import CreateModel from './createModel'
@@ -59,13 +64,24 @@ const getAgentParams = (
   const info = initAgent[agentName]
   if (!info) {
     return {
-      tools: [writeTodosTool],
+      tools: [
+        writeTodosTool,
+        readSkillInstructionTool,
+        readSkillReferenceTool,
+        executeSkillScriptTool,
+      ],
     }
   }
 
   return {
     ...info,
-    tools: [...(info.tools || []), writeTodosTool],
+    tools: [
+      ...(info.tools || []),
+      writeTodosTool,
+      readSkillInstructionTool,
+      readSkillReferenceTool,
+      executeSkillScriptTool,
+    ],
   }
 }
 export default getAgentParams

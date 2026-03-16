@@ -64,10 +64,16 @@
     border-top: 1px solid #d9d9d9;
     .shuttle-ai-tool-result-title {
       font-weight: bold;
+      cursor: pointer;
+      user-select: none;
     }
     .shuttle-ai-tool-result-content {
+      display: none;
       &.type-fail {
         color: var(--ant-color-error);
+      }
+      &.is-expand {
+        display: block;
       }
     }
   }
