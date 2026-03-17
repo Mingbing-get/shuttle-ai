@@ -3,10 +3,12 @@ import { tool } from '@langchain/core/tools'
 import { HumanMessage } from '@langchain/core/messages'
 import { ShuttleAi } from '@shuttle-ai/type'
 import { z } from 'zod'
-import { writeFile, mkdir } from 'fs/promises'
+import { writeFile, mkdir, readFile } from 'fs/promises'
 import { resolve } from 'path'
 
+import { TokenCollector } from './callback'
 import createUseMemoryTools from './createUseMemoryTools'
+import { existsSync } from 'fs'
 
 export default class OrganizeMemory {
   constructor(private options: ShuttleAi.Memory.OrganizeMemoryOptions) {}
@@ -17,7 +19,7 @@ export default class OrganizeMemory {
     const agent = createAgent({
       model: this.options.model,
       tools: this.getTools(),
-      systemPrompt: this.getSystemPrompt(),
+      systemPrompt: await this.getSystemPrompt(),
     })
 
     const omitIdMessages = messages.map((message) => {
@@ -30,9 +32,17 @@ export default class OrganizeMemory {
       return extra
     })
 
-    await agent.invoke({
-      messages: [new HumanMessage(JSON.stringify(omitIdMessages))],
-    })
+    const tokenCollector = new TokenCollector()
+    await agent.invoke(
+      {
+        messages: [new HumanMessage(JSON.stringify(omitIdMessages))],
+      },
+      {
+        callbacks: [tokenCollector],
+      },
+    )
+
+    return tokenCollector.getTokenUseage()
   }
 
   getTools() {
@@ -98,7 +108,12 @@ export default class OrganizeMemory {
     return resolve(this.options.dir, path)
   }
 
-  getSystemPrompt() {
+  async getSystemPrompt() {
+    const indexMdPath = resolve(this.options.dir, 'index.md')
+    const content = existsSync(indexMdPath)
+      ? await readFile(indexMdPath, 'utf-8')
+      : ''
+
     return `# 档案管理员协议
 
 你被赋予了一套基于本地文件系统的“永久记忆系统”访问权限。你的核心任务是作为一名严谨的**档案管理员**，确保与用户的交流成果被结构化地存储、索引，并能在未来的会话中通过“自发现”机制被重新调取。
@@ -158,6 +173,7 @@ export default class OrganizeMemory {
 
 **当前根目录：** \`/\`
 **你的身份：** 拥有完美记忆进化能力的助手。
-**当前时间：** ${new Date().toLocaleString()}`
+**当前时间：** ${new Date().toLocaleString()}
+**已有记忆大纲：** ${content || '无'}`
   }
 }
