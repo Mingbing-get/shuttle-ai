@@ -533,7 +533,7 @@ export default class AgentCluster extends Runnable {
     )
 
     return {
-      prompt: `你拥有扩展skill(技能)的能力，skill的使用步骤如下：
+      prompt: `你拥有扩展skill(技能)的能力，你需**仔细思考**用户的需求，选择合适的skill来完成任务，skill的使用步骤如下：
 1、当你需要了解某个skill的详细信息时，调用${AgentCluster.READ_SKILL_INSTRUCTION_NAME}来读取完整的skill文档
 2、当你需要了解某个skill的引用信息时，调用${AgentCluster.READ_SKILL_REFERENCE_NAME}来读取skill的引用
 3、当你需要执行某个skill的脚本时，调用${AgentCluster.EXECUTE_SKILL_SCRIPT_NAME}来执行skill的脚本
