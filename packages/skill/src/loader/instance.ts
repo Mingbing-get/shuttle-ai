@@ -211,9 +211,7 @@ export default class SkillLoader {
       throw new Error('getEnv not provided')
     }
 
-    const env = skill.metadata?.env
-      ? await this.options.getEnv?.(skillName)
-      : undefined
+    const env = await this.options.getEnv?.(skillName)
 
     requiresEnv?.forEach((key) => {
       if (!env?.[key]) {

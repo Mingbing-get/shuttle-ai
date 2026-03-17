@@ -5,6 +5,7 @@ import {
 import { LLMResult } from '@langchain/core/outputs'
 import { AIMessage } from 'langchain'
 import { randomUUID } from 'crypto'
+import { ShuttleAi } from '@shuttle-ai/type'
 
 import { AgentCluster } from '../cluster'
 
@@ -34,6 +35,14 @@ export default class LLMMessage extends BaseCallbackHandler {
 
   handleLLMEnd(output: LLMResult, runId: string) {
     const message: AIMessage = (output.generations[0][0] as any).message
+    const tokenUseage: ShuttleAi.Cluster.TokenUsage = output.llmOutput
+      ?.tokenUsage || {
+      promptTokens: 0,
+      completionTokens: 0,
+      totalTokens: 0,
+    }
+
+    this.options.agentCluster.spendToken(tokenUseage)
 
     // 不保存获取工具参数定义
     if (

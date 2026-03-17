@@ -25,6 +25,11 @@ export default class AgentCluster extends Runnable {
   readonly lc_namespace = ['shuttle-ai', 'agent', 'cluster']
   readonly id: string
 
+  private tokenUseage: ShuttleAi.Cluster.TokenUsage = {
+    promptTokens: 0,
+    completionTokens: 0,
+    totalTokens: 0,
+  }
   private messages: ShuttleAi.Message.Define[] = []
   private lazyTools: Record<string, (ShuttleAi.Tool.Define | ClientTool)[]> = {}
   readonly abortController = new AbortController()
@@ -654,5 +659,15 @@ ${allSkillMeta.map((meta) => JSON.stringify(meta)).join('\n')}`,
     }
 
     return tools
+  }
+
+  spendToken(tokenUsage: ShuttleAi.Cluster.TokenUsage) {
+    this.tokenUseage.promptTokens += tokenUsage.promptTokens
+    this.tokenUseage.completionTokens += tokenUsage.completionTokens
+    this.tokenUseage.totalTokens += tokenUsage.totalTokens
+  }
+
+  getTokenUsage() {
+    return { ...this.tokenUseage }
   }
 }

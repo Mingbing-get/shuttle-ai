@@ -16,6 +16,12 @@ declare module '@shuttle-ai/type' {
           }
         | NSkillLoader.Options
 
+      export interface TokenUsage {
+        promptTokens: number
+        completionTokens: number
+        totalTokens: number
+      }
+
       export interface Options {
         /**
          * The id of the agent cluster.
