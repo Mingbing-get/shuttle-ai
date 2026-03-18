@@ -85,8 +85,17 @@ export default class Agent {
   }
 
   addToolCall(aiTool: ShuttleAi.Message.AITool) {
-    const aiMessage = this.findAiMessageById(aiTool.id)
-    if (!aiMessage) return
+    let aiMessage = this.findAiMessageById(aiTool.id)
+    if (!aiMessage) {
+      aiMessage = {
+        role: 'assistant',
+        content: '',
+        id: aiTool.id,
+        agentId: this.options.id,
+        workId: this.options.work.id,
+      }
+      this._messages.push(aiMessage)
+    }
 
     aiMessage.toolCalls = [...(aiMessage.toolCalls || []), aiTool.toolCall]
     this._messages.push({
