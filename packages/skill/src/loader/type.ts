@@ -9,12 +9,18 @@ export namespace NSkillLoader {
     | '.bash'
     | '.py'
 
+  export interface RunInDockerConfig {
+    sharedVolumeName: string
+    workDir: string
+  }
+
   export interface ScriptExecuteOptions {
     skillDir: string
     scriptPath: string
     scriptFullPath: string
     args: Record<string, any>
     env?: Record<string, string>
+    runInDocker?: RunInDockerConfig
   }
 
   export interface Options {
@@ -23,6 +29,7 @@ export namespace NSkillLoader {
     supportedScriptExtensions?: SupportedScriptExtensions[]
     pickSkillNames?: string[]
     omitSkillNames?: string[]
+    runInDocker?: RunInDockerConfig
     getEnv?: (skillName: string) => Promise<Record<string, string>>
   }
 

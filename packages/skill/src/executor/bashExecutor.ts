@@ -1,18 +1,14 @@
-import Docker from 'dockerode'
+import DockerExecutor from './dockerExecutor'
 import { NSkillLoader } from '../loader/type'
 
-export default class BashExecutor implements NSkillLoader.Executor {
-  private docker: Docker
-
-  constructor() {
-    this.docker = new Docker()
-  }
-
+export default class BashExecutor
+  extends DockerExecutor
+  implements NSkillLoader.Executor
+{
   async execute(options: NSkillLoader.ScriptExecuteOptions): Promise<string> {
     const { skillDir, scriptPath, args, env } = options
 
     const containerName = `skill-executor-${Date.now()}`
-    const workDir = '/workspace'
 
     const argList = Object.entries(args).map(([key, value]) => {
       const v = typeof value === 'object' ? JSON.stringify(value) : value
@@ -25,6 +21,20 @@ export default class BashExecutor implements NSkillLoader.Executor {
       })
     }
 
+    let workDir = '/workspace'
+    let hostBind = `${skillDir}:${workDir}`
+    let cmd = `cd ${workDir} && bash ${scriptPath}}`
+    if (await this.checkIfRunningInDocker()) {
+      const runInDockerConfig = options.runInDocker
+      if (!runInDockerConfig) {
+        throw new Error('主程序运行在docker中, 但未配置runInDocker参数')
+      }
+
+      workDir = runInDockerConfig.workDir
+      hostBind = `${runInDockerConfig.sharedVolumeName}:${workDir}`
+      cmd = `cd ${skillDir} && bash ${scriptPath}}`
+    }
+
     try {
       await this.pullImage('ubuntu:latest')
 
@@ -32,14 +42,14 @@ export default class BashExecutor implements NSkillLoader.Executor {
         name: containerName,
         Image: 'ubuntu:latest',
         HostConfig: {
-          Binds: [`${skillDir}:${workDir}`],
+          Binds: [hostBind],
           Tmpfs: {
             '/tmp': 'rw,size=100m',
           },
         },
         WorkingDir: workDir,
         Env: argList,
-        Cmd: ['sh', '-c', `cd ${workDir} && bash ${scriptPath}}`],
+        Cmd: ['sh', '-c', cmd],
         User: 'root',
       })
 
@@ -83,32 +93,6 @@ export default class BashExecutor implements NSkillLoader.Executor {
         console.error('Failed to cleanup container:', cleanupError)
       }
       throw error
-    }
-  }
-
-  private async pullImage(imageName: string): Promise<void> {
-    try {
-      await this.docker.getImage(imageName).inspect()
-    } catch (error) {
-      await new Promise<void>((resolve, reject) => {
-        this.docker.pull(
-          imageName,
-          (err: Error | null, stream: NodeJS.ReadableStream) => {
-            if (err) {
-              reject(err)
-              return
-            }
-
-            this.docker.modem.followProgress(stream, (err: Error | null) => {
-              if (err) {
-                reject(err)
-              } else {
-                resolve()
-              }
-            })
-          },
-        )
-      })
     }
   }
 }

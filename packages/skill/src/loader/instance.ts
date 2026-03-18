@@ -228,6 +228,7 @@ export default class SkillLoader {
       scriptFullPath,
       args,
       env,
+      runInDocker: this.options.runInDocker,
     })
   }
 

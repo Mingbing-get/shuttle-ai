@@ -1,18 +1,14 @@
-import Docker from 'dockerode'
+import DockerExecutor from './dockerExecutor'
 import { NSkillLoader } from '../loader/type'
 
-export default class PythonExecutor implements NSkillLoader.Executor {
-  private docker: Docker
-
-  constructor() {
-    this.docker = new Docker()
-  }
-
+export default class PythonExecutor
+  extends DockerExecutor
+  implements NSkillLoader.Executor
+{
   async execute(options: NSkillLoader.ScriptExecuteOptions): Promise<string> {
     const { skillDir, scriptPath, args, env } = options
 
     const containerName = `skill-executor-${Date.now()}`
-    const workDir = '/workspace'
 
     const argList = Object.entries(args).map(([key, value]) => {
       const v = typeof value === 'object' ? JSON.stringify(value) : value
@@ -25,6 +21,20 @@ export default class PythonExecutor implements NSkillLoader.Executor {
       })
     }
 
+    let workDir = '/workspace'
+    let hostBind = `${skillDir}:${workDir}`
+    let cmd = `cd ${workDir} && python ${scriptPath}`
+    if (await this.checkIfRunningInDocker()) {
+      const runInDockerConfig = options.runInDocker
+      if (!runInDockerConfig) {
+        throw new Error('主程序运行在docker中, 但未配置runInDocker参数')
+      }
+
+      workDir = runInDockerConfig.workDir
+      hostBind = `${runInDockerConfig.sharedVolumeName}:${workDir}`
+      cmd = `cd ${skillDir} && python ${scriptPath}`
+    }
+
     try {
       await this.pullImage('python:3.11-alpine')
 
@@ -32,14 +42,14 @@ export default class PythonExecutor implements NSkillLoader.Executor {
         name: containerName,
         Image: 'python:3.11-alpine',
         HostConfig: {
-          Binds: [`${skillDir}:${workDir}`],
+          Binds: [hostBind],
           Tmpfs: {
             '/tmp': 'rw,size=100m',
           },
         },
         WorkingDir: workDir,
         Env: argList,
-        Cmd: ['sh', '-c', `cd ${workDir} && python ${scriptPath}`],
+        Cmd: ['sh', '-c', cmd],
         User: 'root',
       })
 
@@ -83,32 +93,6 @@ export default class PythonExecutor implements NSkillLoader.Executor {
         console.error('Failed to cleanup container:', cleanupError)
       }
       throw error
-    }
-  }
-
-  private async pullImage(imageName: string): Promise<void> {
-    try {
-      await this.docker.getImage(imageName).inspect()
-    } catch (error) {
-      await new Promise<void>((resolve, reject) => {
-        this.docker.pull(
-          imageName,
-          (err: Error | null, stream: NodeJS.ReadableStream) => {
-            if (err) {
-              reject(err)
-              return
-            }
-
-            this.docker.modem.followProgress(stream, (err: Error | null) => {
-              if (err) {
-                reject(err)
-              } else {
-                resolve()
-              }
-            })
-          },
-        )
-      })
     }
   }
 }
