@@ -1,5 +1,14 @@
 # @shuttle-ai/render-react
 
+## 0.0.15
+
+### Patch Changes
+
+- 修复docker in docker时挂载数据卷报错问题
+- Updated dependencies
+  - @shuttle-ai/client@0.0.15
+  - @shuttle-ai/type@0.0.15
+
 ## 0.0.14
 
 ### Patch Changes
