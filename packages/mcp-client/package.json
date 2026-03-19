@@ -26,7 +26,8 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-    "@shuttle-ai/type": "workspace:*"
+    "@shuttle-ai/type": "workspace:*",
+    "@modelcontextprotocol/sdk": "^1.27.1"
   },
   "devDependencies": {
     "@types/node": "^20.11.0",

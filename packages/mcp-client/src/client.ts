@@ -1,33 +1,15 @@
 import { EventEmitter } from 'events'
 import { ShuttleAi } from '@shuttle-ai/type'
-import { HTTPStreamableTransport } from './transports/httpStreamable.js'
+import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp'
+import { Client } from '@modelcontextprotocol/sdk/client/index'
 
 export class MCPClient extends EventEmitter {
-  private servers: Map<string, ShuttleAi.MCP.ServerTransport> = new Map()
+  private servers: Map<string, Client> = new Map()
   private config: ShuttleAi.MCP.ClientConfig
-
-  private transportCreator: Record<
-    ShuttleAi.MCP.ServerConfig['type'],
-    (config: ShuttleAi.MCP.ServerConfig) => ShuttleAi.MCP.ServerTransport
-  > = {
-    streamable_http: (config) =>
-      new HTTPStreamableTransport(
-        config as ShuttleAi.MCP.StreamableHttpServerConfig,
-      ),
-  }
 
   constructor(config: ShuttleAi.MCP.ClientConfig) {
     super()
     this.config = config
-  }
-
-  addTransport<T extends ShuttleAi.MCP.ServerConfig['type']>(
-    type: T,
-    creator: (
-      config: Extract<ShuttleAi.MCP.ServerConfig, { type: T }>,
-    ) => ShuttleAi.MCP.ServerTransport,
-  ) {
-    this.transportCreator[type] = creator as any
   }
 
   addServer(serverConfig: ShuttleAi.MCP.ServerConfig) {
@@ -38,13 +20,8 @@ export class MCPClient extends EventEmitter {
 
   async connect(): Promise<void> {
     const connectionPromises = this.config.servers.map(async (serverConfig) => {
-      const client = this.transportCreator[serverConfig.type](serverConfig)
+      const client = await this.newClient(serverConfig)
 
-      client.on('error', (error: Error) => {
-        this.emit('serverError', { serverName: serverConfig.name, error })
-      })
-
-      await client.initialize()
       this.servers.set(serverConfig.name, client)
     })
 
@@ -62,21 +39,20 @@ export class MCPClient extends EventEmitter {
       throw new Error(`Server already connected: ${serverName}`)
     }
 
-    const client = this.transportCreator[serverConfig.type](serverConfig)
+    const client = await this.newClient(serverConfig)
 
-    client.on('error', (error: Error) => {
-      this.emit('serverError', { serverName, error })
-    })
-
-    await client.initialize()
     this.servers.set(serverName, client)
   }
 
   async disconnect(): Promise<void> {
+    this.servers.forEach((client) => {
+      client.close()
+    })
     this.servers.clear()
   }
 
   async disconnectServer(serverName: string): Promise<void> {
+    this.servers.get(serverName)?.close()
     this.servers.delete(serverName)
   }
 
@@ -137,27 +113,10 @@ export class MCPClient extends EventEmitter {
       throw new Error(`Server not connected: ${serverName}`)
     }
 
-    return await client.callTool(request)
+    return (await client.callTool(request)) as any
   }
 
-  async callToolByName(
-    toolName: string,
-    args?: Record<string, unknown>,
-  ): Promise<ShuttleAi.MCP.ToolCallResponse> {
-    for (const [serverName, client] of this.servers.entries()) {
-      const tools = client.getTools()
-
-      if (tools.has(toolName)) {
-        return await client.callTool({ name: toolName, arguments: args })
-      }
-    }
-
-    throw new Error(`Tool not found: ${toolName}`)
-  }
-
-  getServerTransport(
-    serverName: string,
-  ): ShuttleAi.MCP.ServerTransport | undefined {
+  getServer(serverName: string): Client | undefined {
     return this.servers.get(serverName)
   }
 
@@ -167,5 +126,24 @@ export class MCPClient extends EventEmitter {
 
   getConfig(): ShuttleAi.MCP.ClientConfig {
     return this.config
+  }
+
+  private async newClient(serverConfig: ShuttleAi.MCP.ServerConfig) {
+    const client = new Client({
+      name: '@shuttle-ai/mcp-client',
+      version: '0.1.15',
+    })
+
+    if (serverConfig.type === 'streamable_http') {
+      await client.connect(
+        new StreamableHTTPClientTransport(new URL(serverConfig.url), {
+          requestInit: {
+            headers: serverConfig.headers,
+          },
+        }),
+      )
+    }
+
+    return client
   }
 }

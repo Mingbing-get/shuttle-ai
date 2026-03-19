@@ -23,13 +23,21 @@ const mainAgent: Omit<
       description: '一个管理数据页面的智能体',
     },
   ],
-  // mcps: [
-  //   {
-  //     name: 'MCP-ECharts',
-  //     type: 'streamable_http',
-  //     url: 'https://mcp.api-inference.modelscope.net/70338ac4b30843/mcp',
-  //   },
-  // ],
+  mcps: [
+    // {
+    //   name: 'MCP-ECharts',
+    //   type: 'streamable_http',
+    //   url: 'https://mcp.api-inference.modelscope.net/70338ac4b30843/mcp',
+    // },
+    {
+      name: 'remote-code',
+      type: 'streamable_http',
+      url: 'http://localhost:1234/mcp',
+      headers: {
+        Authorization: 'Bearer 123',
+      },
+    },
+  ],
 }
 
 export default mainAgent
