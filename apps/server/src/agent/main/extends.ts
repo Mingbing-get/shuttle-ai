@@ -29,14 +29,14 @@ const mainAgent: Omit<
     //   type: 'streamable_http',
     //   url: 'https://mcp.api-inference.modelscope.net/70338ac4b30843/mcp',
     // },
-    {
-      name: 'remote-code',
-      type: 'streamable_http',
-      url: 'http://localhost:1234/mcp',
-      headers: {
-        Authorization: 'Bearer 123',
-      },
-    },
+    // {
+    //   name: 'remote-code',
+    //   type: 'streamable_http',
+    //   url: 'http://remote-code.myapping.cn/mcp',
+    //   headers: {
+    //     Authorization: 'Bearer remote-code-test',
+    //   },
+    // },
   ],
 }
 
