@@ -1,5 +1,11 @@
 # @shuttle-ai/type
 
+## 0.0.16
+
+### Patch Changes
+
+- 修复bug
+
 ## 0.0.15
 
 ### Patch Changes

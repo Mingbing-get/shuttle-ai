@@ -1,6 +1,6 @@
 {
   "name": "@shuttle-ai/client",
-  "version": "0.0.15",
+  "version": "0.0.16",
   "author": "Mingbing-get <1508850533@qq.com>",
   "license": "MIT",
   "description": "Shuttle AI 客户端操作库",

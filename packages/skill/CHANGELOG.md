@@ -1,5 +1,13 @@
 # @shuttle-ai/skill
 
+## 0.0.16
+
+### Patch Changes
+
+- 修复bug
+- Updated dependencies
+  - @shuttle-ai/type@0.0.16
+
 ## 0.0.15
 
 ### Patch Changes

@@ -1,5 +1,14 @@
 # @shuttle-ai/render-react
 
+## 0.0.16
+
+### Patch Changes
+
+- 修复bug
+- Updated dependencies
+  - @shuttle-ai/client@0.0.16
+  - @shuttle-ai/type@0.0.16
+
 ## 0.0.15
 
 ### Patch Changes
