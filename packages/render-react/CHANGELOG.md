@@ -1,5 +1,14 @@
 # @shuttle-ai/render-react
 
+## 0.0.17
+
+### Patch Changes
+
+- fix: 修复缺失后缀问题
+- Updated dependencies
+  - @shuttle-ai/client@0.0.17
+  - @shuttle-ai/type@0.0.17
+
 ## 0.0.16
 
 ### Patch Changes
