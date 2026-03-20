@@ -1,7 +1,7 @@
 import { EventEmitter } from 'events'
 import { ShuttleAi } from '@shuttle-ai/type'
-import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp'
-import { Client } from '@modelcontextprotocol/sdk/client/index'
+import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js'
+import { Client } from '@modelcontextprotocol/sdk/client/index.js'
 
 export class MCPClient extends EventEmitter {
   private servers: Map<string, Client> = new Map()
