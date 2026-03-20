@@ -6,7 +6,7 @@ import { ShuttleAi } from '@shuttle-ai/type'
 import { createUseMemoryTools, OrganizeMemory } from '@shuttle-ai/memory'
 import {
   AgentCluster,
-  readableHook,
+  StreamReadableHook,
   FileMessageCollector,
 } from '@shuttle-ai/agent'
 import { resolve } from 'path'
@@ -69,12 +69,13 @@ const invoke: Middleware = async (ctx) => {
   ctx.set('Connection', 'keep-alive')
   ctx.status = 200
 
-  const { stream, hooks, send, close, resolveConfirmTool, resolveAgentStart } =
-    readableHook(loadAgent)
+  const streamReadableHook = new StreamReadableHook({
+    getAgentParamsFromServer: loadAgent,
+  })
 
   const agentCluster = new AgentCluster({
     id: workId,
-    hooks: hooks,
+    hooks: streamReadableHook.hooks,
     autoRunScope,
     messageCollector: new FileMessageCollector(
       resolve(process.cwd(), './agent/messages'),
@@ -82,13 +83,18 @@ const invoke: Middleware = async (ctx) => {
   })
 
   resolverManager.addAgentResolver(agentCluster.id, {
-    resolveConfirmTool,
-    resolveAgentStart,
+    resolveConfirmTool: (id, value) =>
+      streamReadableHook.resolveConfirmTool(id, value),
+    resolveAgentStart: (id, value) =>
+      streamReadableHook.resolveAgentStart(id, value),
   })
 
   function closeAll() {
-    send({ type: 'endWork', data: { workId: agentCluster.id } })
-    close()
+    streamReadableHook.send({
+      type: 'endWork',
+      data: { workId: agentCluster.id },
+    })
+    streamReadableHook.close()
     agentCluster.stop()
     resolverManager.removeAgentResolver(agentCluster.id)
 
@@ -105,12 +111,15 @@ const invoke: Middleware = async (ctx) => {
     organizeMemory.start(agentCluster.getMessages())
   }
 
-  ctx.req.on('close', closeAll)
+  // ctx.req.on('close', closeAll)
 
   // 由于是流式响应，不返回常规的响应体
-  ctx.body = stream
+  ctx.body = streamReadableHook.createStream()
 
-  send({ type: 'startWork', data: { workId: agentCluster.id } })
+  streamReadableHook.send({
+    type: 'startWork',
+    data: { workId: agentCluster.id },
+  })
   agentCluster.invoke(prompt).then(closeAll)
 }
 

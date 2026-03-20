@@ -1,3 +1,3 @@
 export { default as AgentCluster } from './instance'
-export { default as readableHook } from './readableHook'
+export { default as StreamReadableHook } from './streamReadableHook'
 export { default as FileMessageCollector } from './fileMessageCollector'
